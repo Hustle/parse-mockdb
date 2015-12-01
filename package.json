@@ -1,0 +1,39 @@
+{
+  "name": "parse-mockdb",
+  "version": "0.0.3",
+  "description": "Parse JS SDK Mocked Backend",
+  "main": "src/parse-mockdb.js",
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "scripts": {
+    "test": "mocha ./test/test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HustleInc/parse-mockdb.git"
+  },
+  "keywords": [
+    "parse",
+    "parsesdk",
+    "mock",
+    "stub",
+    "unit-testing"
+  ],
+  "author": "Roddy Lindsay, Tyler Brock",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HustleInc/parse-mockdb/issues"
+  },
+  "homepage": "https://github.com/HustleInc/parse-mockdb",
+  "dependencies": {
+    "lodash": "^3.5.0",
+    "parse": "^1.6.0"
+  },
+  "devDependencies": {
+    "mocha": "^2.2.5"
+  },
+  "directories": {
+    "test": "test"
+  }
+}
