@@ -13,8 +13,8 @@ npm install parse-mockdb --save-dev
 
 ```js
 'use strict';
-const ParseMockDB = require('../src/parse-mockdb');
 const Parse = require('parse/node');
+const ParseMockDB = require('parse-mockdb');
 
 ParseMockDB.mockDB(); // Mock the Parse RESTController
 
