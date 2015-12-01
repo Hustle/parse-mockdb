@@ -1,6 +1,6 @@
 'use strict';
 
-const Parse = require('parse/node');
+const Parse = require('parse-shim');
 const _ = require('lodash');
 
 const DEFAULT_LIMIT = 100;
