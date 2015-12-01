@@ -6,6 +6,7 @@ const _ = require('lodash');
 const DEFAULT_LIMIT = 100;
 const HARD_LIMIT = 1000;
 const MAX_SKIP = 10000;
+const QUOTE_REGEXP = /(\\Q|\\E)/g;
 
 const CONFIG = {
   DEBUG: process.env.DEBUG_DB
@@ -32,12 +33,12 @@ function mockDB() {
   if (!mocked) {
     default_controller = Parse.CoreManager.getRESTController();
     mocked = true;
-    Parse.CoreManager.setRESTController(MockRestController);
+    Parse.CoreManager.setRESTController(MockRESTController);
   }
 }
 
 /**
- * Restores the original RESTController
+ * Restores the original RESTController.
  */
 function unMockDB() {
   if (mocked) {
@@ -47,59 +48,85 @@ function unMockDB() {
 }
 
 /**
- * Clears the MockDB.
+ * Clears the MockDB and any registered hooks.
  */
 function cleanUp() {
   db = {};
   hooks = {};
 }
 
-function registerHook(className, hookType, promiseFn) {
+/**
+ * Registers a hook to on a class denoted by className.
+ *
+ * @param {string} className The name of the class to register hook on.
+ * @param {string} hookType One of 'beforeSave', 'afterSave', 'beforeDelete', 'afterDelete'
+ * @param {function} hookFn Function that will be called with `this` bound to hydrated model.
+ *                          Must return a promise.
+ *
+ * @note Only supports beforeSave at the moment.
+ */
+function registerHook(className, hookType, hookFn) {
   if (!hooks[className]) {
     hooks[className] = {};
   }
 
-  hooks[className][hookType] = promiseFn;
+  hooks[className][hookType] = hookFn;
 };
 
+/**
+ * Retrieves a previously registered hook.
+ *
+ * @param {string} className The name of the class to get the hook on.
+ * @param {string} hookType One of 'beforeSave', 'afterSave', 'beforeDelete', 'afterDelete'
+ */
 function getHook(className, hookType) {
   if (hooks[className] && hooks[className][hookType]) {
     return hooks[className][hookType];
   }
 }
 
+/**
+ * Executes a registered hook with data provided.
+ *
+ * Hydrates the data into an instance of the class named by `className` param and binds it to the
+ * function to be run.
+ *
+ * @param {string} className The name of the class to get the hook on.
+ * @param {string} hookType One of 'beforeSave', 'afterSave', 'beforeDelete', 'afterDelete'
+ * @param {Object} data The Data that is to be hydrated into an instance of className class.
+ */
 function runHook(className, hookType, data) {
   const hook = getHook(className, hookType);
   if (hook) {
-    var modelData = Object.assign(new Object, data, {className});
-    var model = Parse.Object.fromJSON(_.omit(modelData, "ACL"));
+    const modelData = Object.assign(new Object, data, {className});
+    const model = Parse.Object.fromJSON(modelData);
 
     return hook.bind(model)().then((result) => {
-      debugPrint('HOOK', { result });
-      var newData = _.cloneDeep(result.toJSON());
-      return Parse.Promise.as(_.omit(newData, "ACL"));
-    }, (error) => {
-      debugPrint('HOOK', { error });
-      return Parse.Promise.error(error);
+      debugPrint('HOOK', result);
+      return Parse.Promise.as(result.toJSON());
     });
   }
-  return Parse.Promise.as(_.omit(data, "ACL"));
+  return Parse.Promise.as(data);
 }
 
-// Destructive
+// Destructive. Takes data for update operation and removes all atomic operations.
+// Returns the extracted ops.
 function extractOps(data) {
   var ops = new Object();
 
   for (var key in data) {
     var attribute = data[key];
-    if (typeof attribute === "object" && "__op" in attribute) {
+    if (isOp(attribute)) {
       ops[key] = attribute;
       delete data[key];
     }
   }
+
   return ops;
 }
 
+// Destructive. Applys all the update `ops` to `data`.
+// Throws on unknown update operator.
 function applyOps(data, ops) {
   debugPrint('OPS', ops);
   for (var key in ops) {
@@ -114,6 +141,8 @@ function applyOps(data, ops) {
   }
 }
 
+// Ensures `object` has an array at `key`. Creates array if `key` doesn't exist.
+// Will throw if value for `key` exists and is not Array.
 function ensureArray(object, key) {
   if (!object[key]) {
     object[key] = new Array();
@@ -123,6 +152,13 @@ function ensureArray(object, key) {
   }
 }
 
+/**
+ * Operator functions assume binding to **object** on which update operator is to be applied.
+ *
+ * Params:
+ *    key   - value to be modified in bound object.
+ *    value - operator value, i.e. `{__op: "Increment", amount: 1}`
+ */
 const UPDATE_OPERATORS = {
   Increment: function(key, value) {
     this[key] += value.amount;
@@ -167,7 +203,7 @@ function getCollection(collection) {
   return db[collection];
 }
 
-var MockRestController = {
+var MockRESTController = {
   request: function(method, path, data, options) {
     var result;
     if (path === "batch") {
@@ -335,6 +371,10 @@ function makePointer(className, id) {
   }
 }
 
+function isOp(object) {
+  return object && typeof object === "object" && "__op" in object;
+}
+
 function isPointer(object) {
   return object && object.__type === "Pointer";
 }
@@ -441,22 +481,23 @@ function queryFilter(whereClause) {
   };
 }
 
+// Note: does not support nested (dotted) attributes at this time
 function evaluateObject(object, whereParams, key) {
   if (typeof whereParams === "object") {
-    // Handle objects that are actually values
+    // Handle objects that actually represent scalar values
     if (isPointer(whereParams) || isDate(whereParams)) {
       return QUERY_OPERATORS['$eq'].apply(object[key], [whereParams]);
     }
 
-    // Note: does not support nested (dotted) attributes at this time
-    return Object.keys(whereParams).reduce(function(matches, constraint) {
+    // Process each key in where clause to determine if we have a match
+    return _.reduce(whereParams, function(matches, value, constraint) {
       var keyValue = deserializeQueryParam(object[key]);
-      var param = deserializeQueryParam(whereParams[constraint]);
+      var param = deserializeQueryParam(value);
 
-      // Constraints can either be in the form of a query operator OR an equality match
-      if (constraint in QUERY_OPERATORS) {
+      // Constraint can take the form form of a query operator OR an equality match
+      if (constraint in QUERY_OPERATORS) {  // { age: {$lt: 30} }
         return matches && QUERY_OPERATORS[constraint].apply(keyValue, [param]);
-      } else {
+      } else {                              // { age: 30 }
         return matches && QUERY_OPERATORS['$eq'].apply(keyValue[constraint], [param]);
       }
     }, true);
@@ -465,9 +506,15 @@ function evaluateObject(object, whereParams, key) {
   return QUERY_OPERATORS['$eq'].apply(object[key], [whereParams]);
 }
 
+/**
+ * Operator functions assume binding to **value** on which query operator is to be applied.
+ *
+ * Params:
+ *    value - operator value, i.e. the number 30 in `age: {$lt: 30}`
+ */
 const QUERY_OPERATORS = {
   '$exists': function(value) {
-    return this == value;
+    return !!this;
   },
   '$in': function(values) {
     return _.any(values, function(value) {
@@ -496,6 +543,10 @@ const QUERY_OPERATORS = {
   },
   '$gte': function(value) {
     return this >= value;
+  },
+  '$regex': function(value) {
+    const regex = _.clone(value).replace(QUOTE_REGEXP, "");
+    return (new RegExp(regex).test(this))
   },
   '$select': function(value) {
     var foreignKey = value.key;
@@ -570,6 +621,7 @@ function objectsAreEqual(obj1, obj2) {
   return false;
 }
 
+// **HACK** Makes testing easier.
 function promiseResultSync(promise) {
   var result;
   promise.then(function(res) {
@@ -584,7 +636,6 @@ Parse.MockDB = {
   cleanUp: cleanUp,
   promiseResultSync: promiseResultSync,
   registerHook: registerHook,
-  CONFIG: CONFIG,
 };
 
 module.exports = Parse.MockDB;

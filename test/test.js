@@ -524,6 +524,17 @@ describe('ParseMock', function(){
     })
   })
 
+  it("should handle $regex queries", function(done) {
+    createBrandP("Acme").then(function(item) {
+      var query = new Parse.Query(Brand);
+      query.startsWith("name", "Ac");
+      return query.find();
+    }).then(function(results) {
+      assert.equal(results.length, 1);
+      done();
+    })
+  })
+
 /**
  *  see: https://github.com/ParsePlatform/Parse-SDK-JS/issues/91
  *
