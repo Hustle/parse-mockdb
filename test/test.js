@@ -834,4 +834,25 @@ describe('ParseMock', function(){
     })
   })
 
+  it('successfully uses containsAll query', function(done) {
+    Parse.Promise.when([createItemP(30), createItemP(20)]).then((item1, item2) => {
+      const store = new Store({
+        items: [item1.toPointer(), item2.toPointer()],
+      });
+      return store.save().then(savedStore => {
+        const query = new Parse.Query(Store);
+        query.containsAll("items", [item1.toPointer(), item2.toPointer()]);
+        return query.find();
+      }).then(stores => {
+        assert(stores.length === 1);
+        const query = new Parse.Query(Store);
+        query.containsAll("items", [item2.toPointer(), 4]);
+        return query.find();
+      }).then(stores => {
+        assert(stores.length === 0);
+        done();
+      });
+    });
+  });
+
 });

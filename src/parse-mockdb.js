@@ -562,7 +562,14 @@ const QUERY_OPERATORS = {
     return _.find(matches, function(match) {
       return this && match.objectId === this.objectId;
     }, this);
-  }
+  },
+  '$all': function(value) {
+    return _.every(value, function(obj1) {
+      return _.some(this, function(obj2) {
+        return objectsAreEqual(obj1, obj2);
+      }, this);
+    }, this);
+  },
 }
 
 /**
