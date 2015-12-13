@@ -361,6 +361,38 @@ describe('ParseMock', function(){
       done();
     })
   });
+  
+  it("should match a correct when exists query", function(done) {
+    Parse.Promise.when([
+      new Item().save({price: 30}),
+      new Item().save({name: 'Device'})
+    ])
+    .then(function(item1, item2) {
+      var itemQuery = new Parse.Query(Item);
+      itemQuery.exists('price');
+      itemQuery.find().then(function(itmes) {
+        assert(itmes.length === 1);
+        assert(itmes[0].id === item1.id);
+        done();
+      });
+    });
+  });
+  
+  it("should match a correct when doesNotExist query", function(done) {
+    Parse.Promise.when([
+      new Item().save({price: 30}),
+      new Item().save({name: 'Device'})
+    ])
+    .then(function(item1, item2) {
+      var itemQuery = new Parse.Query(Item);
+      itemQuery.doesNotExist('price');
+      itemQuery.find().then(function(itmes) {
+        assert(itmes.length === 1);
+        assert(itmes[0].id === item2.id);
+        done();
+      });
+    });
+  });
 
   it("should match a correct equalTo query for an object", function(done) {
     createItemP(30).then(function(item) {
