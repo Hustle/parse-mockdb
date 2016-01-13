@@ -186,7 +186,6 @@ describe('ParseMock', function(){
   });
 
   it('should saveAll and find 2 items', function (done) {
-    var Item = Parse.Object.extend("Item");
     var item = new Item();
     item.set("price", 30);
 
@@ -198,8 +197,8 @@ describe('ParseMock', function(){
       query.equalTo("price", 30);
       return query.find().then(function(items) {
         assert(items.length === 2);
-        assert(items[0].get("price") == 30);
-        assert(items[1].get("price") == 30);
+        assert(items[0].get("price") === 30);
+        assert(items[1].get("price") === 30);
         done();
       });
     });

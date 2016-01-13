@@ -245,8 +245,8 @@ function handleBatchRequest(method, path, data) {
     })
   })
 
-  return Parse.Promise.when(getResults).then((results) => {
-    return respond(200, results);
+  return Parse.Promise.when(...getResults).then(function(results) {
+    return respond(200, arguments);
   })
 }
 
