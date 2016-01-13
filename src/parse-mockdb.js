@@ -219,10 +219,7 @@ var MockRESTController = {
 
     return result.then(function(result) {
       debugPrint('RESPONSE', result.response);
-      return Parse.Promise.when([
-        result.response,
-        result.status,
-      ]);
+      return Parse.Promise.when(result.response, result.status);
     });
   },
   ajax: function() {
@@ -248,8 +245,8 @@ function handleBatchRequest(method, path, data) {
     })
   })
 
-  return Parse.Promise.when(getResults).then(function() {
-    return respond(200, arguments);
+  return Parse.Promise.when(getResults).then((results) => {
+    return respond(200, results);
   })
 }
 

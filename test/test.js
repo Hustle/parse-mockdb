@@ -244,7 +244,7 @@ describe('ParseMock', function(){
   });
 
   it('should save 2 items and get one for a first() query', function (done) {
-    Parse.Promise.when([createItemP(30), createItemP(20)]).then(function(item1, item2) {
+    Parse.Promise.when(createItemP(30), createItemP(20)).then(function(item1, item2) {
       var query = new Parse.Query(Item);
       return query.first().then(function(item) {
         assert(item.get("price") == 30);
@@ -361,29 +361,27 @@ describe('ParseMock', function(){
       done();
     })
   });
-  
+
   it("should match a correct when exists query", function(done) {
-    Parse.Promise.when([
+    Parse.Promise.when(
       new Item().save({price: 30}),
       new Item().save({name: 'Device'})
-    ])
-    .then(function(item1, item2) {
+    ).then(function(item1, item2) {
       var itemQuery = new Parse.Query(Item);
       itemQuery.exists('price');
-      itemQuery.find().then(function(itmes) {
-        assert(itmes.length === 1);
-        assert(itmes[0].id === item1.id);
+      itemQuery.find().then(function(items) {
+        assert(items.length === 1);
+        assert(items[0].id === item1.id);
         done();
       });
     });
   });
-  
+
   it("should match a correct when doesNotExist query", function(done) {
-    Parse.Promise.when([
+    Parse.Promise.when(
       new Item().save({price: 30}),
       new Item().save({name: 'Device'})
-    ])
-    .then(function(item1, item2) {
+    ).then(function(item1, item2) {
       var itemQuery = new Parse.Query(Item);
       itemQuery.doesNotExist('price');
       itemQuery.find().then(function(itmes) {
@@ -453,7 +451,7 @@ describe('ParseMock', function(){
   });
 
   it("should find 2 objects when there are 2 matches", function(done) {
-    Parse.Promise.when([createItemP(20), createItemP(20)]).then(function(item1, item2) {
+    Parse.Promise.when(createItemP(20), createItemP(20)).then(function(item1, item2) {
       var query = new Parse.Query(Item);
       query.equalTo("price", 20);
       query.find().then(function(results) {
@@ -464,7 +462,7 @@ describe('ParseMock', function(){
   });
 
   it("should first() 1 object when there are 2 matches", function(done) {
-    Parse.Promise.when([createItemP(20), createItemP(20)]).then(function(item1, item2) {
+    Parse.Promise.when(createItemP(20), createItemP(20)).then(function(item1, item2) {
       var query = new Parse.Query(Item);
       query.equalTo("price", 20);
       query.first().then(function(result) {
@@ -475,7 +473,7 @@ describe('ParseMock', function(){
   });
 
   it("should match a query with 1 objects when 2 objects are present", function(done) {
-    Parse.Promise.when([createItemP(20), createItemP(30)]).then(function(item1, item2) {
+    Parse.Promise.when(createItemP(20), createItemP(30)).then(function(item1, item2) {
       var query = new Parse.Query(Item);
       query.equalTo("price", 20);
       query.find().then(function(results) {
@@ -523,7 +521,7 @@ describe('ParseMock', function(){
   })
 
   it("should handle $nin", function(done) {
-    Parse.Promise.when([createItemP(20), createItemP(30)]).then(function(item1, item2) {
+    Parse.Promise.when(createItemP(20), createItemP(30)).then(function(item1, item2) {
       var query = new Parse.Query(Item);
       query.notContainedIn("price", [30]);
       return query.find();
@@ -594,7 +592,7 @@ describe('ParseMock', function(){
  *  see: https://github.com/ParsePlatform/Parse-SDK-JS/issues/91
  *
   it("should update an existing object correctly", function(done) {
-    Parse.Promise.when([createItemP(30), createItemP(20)]).then(function(item1, item2) {
+    Parse.Promise.when(createItemP(30), createItemP(20)).then(function(item1, item2) {
       createStoreWithItemP(item1).then(function(store) {
         item2.set("price", 10);
         store.set("item", item2);
@@ -632,7 +630,7 @@ describe('ParseMock', function(){
 
       var storeQuery = new Parse.Query(Store);
       storeQuery.matchesKeyInQuery("state", "state", itemQuery);
-      return Parse.Promise.when([storeQuery.find(), Parse.Promise.as(store)]);
+      return Parse.Promise.when(storeQuery.find(), Parse.Promise.as(store));
     }).then(function(storeMatches, store) {
       assert(storeMatches.length == 1);
       assert(storeMatches[0].id == store.id);
@@ -867,7 +865,7 @@ describe('ParseMock', function(){
   })
 
   it('successfully uses containsAll query', function(done) {
-    Parse.Promise.when([createItemP(30), createItemP(20)]).then((item1, item2) => {
+    Parse.Promise.when(createItemP(30), createItemP(20)).then((item1, item2) => {
       const store = new Store({
         items: [item1.toPointer(), item2.toPointer()],
       });
