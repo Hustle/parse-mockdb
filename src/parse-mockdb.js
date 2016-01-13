@@ -514,14 +514,14 @@ const QUERY_OPERATORS = {
     return !!this === value;
   },
   '$in': function(values) {
-    return _.any(values, function(value) {
+    return _.some(values, value => {
       return objectsAreEqual(this, value);
-    }, this);
+    });
   },
   '$nin': function(values) {
-    return _.all(values, function(value) {
+    return _.every(values, value => {
       return !objectsAreEqual(this, value);
-    }, this);
+    });
   },
   '$eq': function(value) {
     return objectsAreEqual(this, value);
@@ -556,16 +556,16 @@ const QUERY_OPERATORS = {
   },
   '$inQuery': function(query) {
     var matches = recursivelyMatch(query.className, query.where);
-    return _.find(matches, function(match) {
+    return _.find(matches, match => {
       return this && match.objectId === this.objectId;
-    }, this);
+    });
   },
   '$all': function(value) {
-    return _.every(value, function(obj1) {
-      return _.some(this, function(obj2) {
+    return _.every(value, obj1 => {
+      return _.some(this, obj2 => {
         return objectsAreEqual(obj1, obj2);
-      }, this);
-    }, this);
+      });
+    });
   },
 }
 

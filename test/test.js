@@ -529,7 +529,7 @@ describe('ParseMock', function(){
       assert.equal(results.length, 1);
       assert.equal(results[0].get("price"), 20);
       done();
-    })
+    }, function(error) {console.log(error)})
   })
 
   it("should handle $nin on objectId", function(done) {
