@@ -4,7 +4,7 @@
   "description": "Parse JS SDK Mocked Database",
   "main": "src/parse-mockdb.js",
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=5.0.0"
   },
   "scripts": {
     "test": "mocha ./test/test"
