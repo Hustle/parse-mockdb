@@ -21,6 +21,7 @@ const HANDLERS = {
 
 var db = {};
 var hooks = {};
+var relations = {};
 
 var default_controller = null;
 var mocked = false;
@@ -85,6 +86,19 @@ function getHook(className, hookType) {
   }
 }
 
+function getRelation(className, id, key) {
+  if (!relations[className]) {
+    relations[className] = {};
+  }
+  if (!relations[className][id]) {
+    relations[className][id] = {};
+  }
+  if (!relations[className][id][key]) {
+    relations[className][id][key] = [];
+  }
+  return relations[className][id][key];
+}
+
 /**
  * Executes a registered hook with data provided.
  *
@@ -127,14 +141,14 @@ function extractOps(data) {
 
 // Destructive. Applys all the update `ops` to `data`.
 // Throws on unknown update operator.
-function applyOps(data, ops) {
+function applyOps(data, ops, className) {
   debugPrint('OPS', ops);
   for (var key in ops) {
     const value = ops[key];
     const operator = value["__op"];
 
     if (operator in UPDATE_OPERATORS) {
-      UPDATE_OPERATORS[operator].bind(data)(key, value)
+      UPDATE_OPERATORS[operator].bind(data)(key, value, className)
     } else {
       throw new Error("Unknown update operator:" + key);
     }
@@ -187,6 +201,18 @@ const UPDATE_OPERATORS = {
   },
   Delete: function(key, value) {
     delete this[key];
+  },
+  AddRelation: function(key, value, className) {
+    const relation = getRelation(className, this.objectId, key);
+    value.objects.forEach(pointer => {
+      relation.push(pointer);
+    });
+  },
+  RemoveRelation: function(key, value, className) {
+    const relation = getRelation(className, this.objectId, key);
+    value.objects.forEach(item => {
+      _.remove(relation, pointer => objectsAreEqual(pointer, item));
+    })
   }
 }
 
@@ -214,10 +240,10 @@ var MockRESTController = {
       result = handleRequest(method, path, data);
     }
 
-    // Status of database after handling request above
-    debugPrint('DB', db);
-
     return result.then(function(result) {
+      // Status of database after handling request above
+      debugPrint('DB', db);
+      debugPrint('RELATIONS', relations);
       debugPrint('RESPONSE', result.response);
       return Parse.Promise.when(result.response, result.status);
     });
@@ -310,12 +336,16 @@ function handlePostRequest(request) {
     const newId = _.uniqueId();
     const now = new Date();
 
+    const ops = extractOps(result);
+
     var newObject = Object.assign(
       result,
       { objectId: newId, createdAt: now, updatedAt: now }
     );
 
-    collection[newId] = result;
+    applyOps(newObject, ops, request.className);
+
+    collection[newId] = newObject;
 
     var response = Object.assign(
       _.cloneDeep(_.omit(newObject, 'updatedAt')),
@@ -340,7 +370,7 @@ function handlePutRequest(request) {
     { updatedAt: now }
   );
 
-  applyOps(updatedObject, ops);
+  applyOps(updatedObject, ops, request.className);
 
   return runHook(request.className, 'beforeSave', updatedObject).then(result => {
     collection[request.objectId] = updatedObject;
@@ -486,6 +516,10 @@ function evaluateObject(object, whereParams, key) {
       return QUERY_OPERATORS['$eq'].apply(object[key], [whereParams]);
     }
 
+    if (key in QUERY_OPERATORS) {
+      return QUERY_OPERATORS[key].apply(object, [whereParams]);
+    }
+
     // Process each key in where clause to determine if we have a match
     return _.reduce(whereParams, function(matches, value, constraint) {
       var keyValue = deserializeQueryParam(object[key]);
@@ -565,6 +599,16 @@ const QUERY_OPERATORS = {
       return _.some(this, obj2 => {
         return objectsAreEqual(obj1, obj2);
       });
+    });
+  },
+  '$relatedTo': function(value) {
+    var object = value.object;
+    var className = object.className;
+    var id = object.objectId;
+    var relatedKey = value.key;
+    var relations = getRelation(className, id, relatedKey);
+    return _.some(relations, relation => {
+      return objectsAreEqual(this, relation);
     });
   },
 }

@@ -884,4 +884,38 @@ describe('ParseMock', function(){
     });
   });
 
+  it('should handle relations', function(done) {
+    var store = new Store();
+
+    var paperTowels = createItemP(20, 'paper towels');
+    var toothPaste = createItemP(30, 'tooth paste');
+    var toothBrush = createItemP(50, 'tooth brush');
+
+    Parse.Promise.when(
+      paperTowels,
+      toothPaste,
+      toothBrush
+    ).then((paperTowels, toothPaste, toothBrush) => {
+      var relation = store.relation('items');
+      relation.add(paperTowels);
+      relation.add(toothPaste);
+      return store.save();
+    }).then(() => {
+      var relation = store.relation('items');
+      var query = relation.query();
+      return query.find();
+    }).then((items) => {
+      assert(items.length === 2);
+      var relation = store.relation('items');
+      relation.remove(items[1]);
+      return store.save();
+    }).then((store) => {
+      var relation = store.relation('items');
+      return store.relation('items').query().find();
+    }).then((items) => {
+      assert.equal(items.length, 1);
+      done();
+    });
+  });
+
 });
