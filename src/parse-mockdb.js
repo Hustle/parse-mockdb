@@ -196,7 +196,7 @@ const UPDATE_OPERATORS = {
     ensureArray(this, key);
     var array = this[key];
     value.objects.forEach(object => {
-      this[key] = _.reject(array, item => { return item === object });
+      _.remove(array, item => objectsAreEqual(item, object));
     });
   },
   Delete: function(key, value) {
@@ -474,10 +474,10 @@ function fetchObjectByPointer(pointer) {
  * Given a class name and a where clause, returns DB matches by applying
  * the where clause (recursively if nested)
  */
-function recursivelyMatch(className, whereClause) {
-  debugPrint('MATCH', {className, whereClause});
+function recursivelyMatch(className, where) {
+  debugPrint('MATCH', {className, where});
   const collection = getCollection(className);
-  var matches = _.filter(_.values(collection), queryFilter(whereClause));
+  var matches = _.filter(_.values(collection), queryFilter(where));
   debugPrint('MATCHES', {matches});
   return _.cloneDeep(matches); // return copies instead of originals
 }
@@ -485,23 +485,23 @@ function recursivelyMatch(className, whereClause) {
 /**
  * Returns a function that filters query matches on a where clause
  */
-function queryFilter(whereClause) {
-  if (whereClause["$or"]) {
+function queryFilter(where) {
+  if (where["$or"]) {
     return function(object) {
-      return _.reduce(whereClause["$or"], function(result, subclause) {
+      return _.reduce(where["$or"], function(result, subclause) {
         return result || queryFilter(subclause)(object);
       }, false);
     }
   }
 
   return function(object) {
-    if (whereClause.objectId && typeof whereClause.objectId !== "object") {
+    if (where.objectId && typeof where.objectId !== "object") {
       // this is a get() request. simply match on ID
-      return object.objectId === whereClause.objectId;
+      return object.objectId === where.objectId;
     }
 
     // Go through each key in where clause
-    return _.reduce(whereClause, function(result, whereParams, key) {
+    return _.reduce(where, function(result, whereParams, key) {
       var match = evaluateObject(object, whereParams, key);
       return result && match;
     }, true);
