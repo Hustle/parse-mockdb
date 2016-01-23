@@ -5,7 +5,7 @@ Master Build Status: [![Circle CI](https://circleci.com/gh/HustleInc/parse-mockd
 
 Provides a mocked Parse RESTController compatible with version `1.6+` **ONLY** of the JavaScript SDK.
 
-## Installation and Usage
+### Installation and Usage
 
 ```js
 npm install parse-mockdb --save-dev
@@ -24,7 +24,19 @@ ParseMockDB.cleanUp(); // Clear the Database
 ParseMockDB.unMockDB(); // Un-mock the Parse RESTController
 ```
 
-## Tests
+### Completeness
+
+ - [x] Basic CRUD (save, destroy, fetch)
+ - [x] Query operators ($exists, $in, $nin, $eq, $ne, $lt, $lte, $gt, $gte, $regex, $select, $inQuery, $all)
+ - [x] Update operators (Increment, Add, AddUnique, Remove, Delete)
+ - [x] Parse.Relation (AddRelation, RemoveRelation)
+ - [ ] Parse class level permissions
+ - [ ] Parse.ACL (row level permissions)
+ - [ ] Parse special classes (Parse.User, Parse.Role, ...)
+ - [ ] Parse query dotted notation matching eg `{ "name.first": "Tyler" })`
+ - [ ] Parse lifecycle hooks (beforeSave - done, afterSave, beforeDelete, afterDelete)
+
+### Tests
 
 ```sh
 npm test
