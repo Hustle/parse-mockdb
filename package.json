@@ -27,7 +27,7 @@
   "homepage": "https://github.com/HustleInc/parse-mockdb",
   "dependencies": {
     "lodash": "^4.0.0",
-    "parse": ">= 1.6.0 || 1.7.0-rc1",
+    "parse": ">=1.6.0",
     "parse-shim": "^1.0.5"
   },
   "devDependencies": {
