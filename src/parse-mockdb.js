@@ -307,7 +307,14 @@ function handleGetRequest(request) {
   if (objId) {
     // Object.fetch() query
     const collection = getCollection(request.className);
-    var match = _.cloneDeep(collection[objId])
+    const currentObject = collection[objId];
+    if (!currentObject) {
+      return Parse.Promise.as(respond(404, {
+        code: 101,
+        error: 'object not found for update'
+      }));
+    }
+    var match = _.cloneDeep(currentObject);
     return Parse.Promise.as(respond(200, match));
   }
 
@@ -358,11 +365,19 @@ function handlePostRequest(request) {
 
 function handlePutRequest(request) {
   const collection = getCollection(request.className);
-  const currentObject = collection[request.objectId];
+  const objId = request.objectId;
+  const currentObject = collection[objId];
   const now = new Date();
-  const data = request.data;
+  const data = request.data || {};
 
   const ops = extractOps(data);
+
+  if (!currentObject) {
+    return Parse.Promise.as(respond(404, {
+      code: 101,
+      error: 'object not found for get'
+    }));
+  }
 
   var updatedObject = Object.assign(
     _.cloneDeep(currentObject),
