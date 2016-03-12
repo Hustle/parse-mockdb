@@ -326,6 +326,16 @@ function handleGetRequest(request) {
 
   matches = queryMatchesAfterIncluding(matches, request.data.include);
 
+  // TODO: Can we just call toJSON() in order to avoid this?
+  matches.forEach(match => {
+    if (match.createdAt) {
+      match.createdAt = match.createdAt.toJSON();
+    }
+    if (match.updatedAt) {
+      match.updatedAt = match.updatedAt.toJSON();
+    }
+  })
+
   var limit = request.data.limit || DEFAULT_LIMIT;
   var startIndex = request.data.skip || 0;
   var endIndex = startIndex + limit;

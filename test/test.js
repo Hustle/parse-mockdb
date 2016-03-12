@@ -69,6 +69,18 @@ describe('ParseMock', function(){
     });
   });
 
+  it("should come back with createdAt", function(done) {
+    var createdAt;
+    createItemP(30).then(function(item) {
+      assert(item.createdAt);
+      createdAt = item.createdAt;
+      return (new Parse.Query(Item)).first();
+    }).then((fetched) => {
+      assert.equal(createdAt.getTime(), fetched.createdAt.getTime());
+      done();
+    })
+  })
+
   it("should get a specific ID correctly", function(done) {
     createItemP(30).then(function(item) {
       var query = new Parse.Query(Item);
