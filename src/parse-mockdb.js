@@ -282,13 +282,21 @@ function normalizePath(path) {
   return path.replace('/1/', '');
 }
 
+const SPECIAL_CLASS_NAMES = {
+  roles: '_Role',
+  users: '_User',
+}
+
 function handleRequest(method, path, body) {
-  var explodedPath = normalizePath(path).split('/');
+  const explodedPath = normalizePath(path).split('/');
+  const start = explodedPath.shift();
+  const className = start === 'classes' ? explodedPath.shift() : SPECIAL_CLASS_NAMES[start]
+
   var request = {
     method: method,
-    className: explodedPath[1],
+    className,
     data: body,
-    objectId: explodedPath[2],
+    objectId: explodedPath.shift(),
   };
   return HANDLERS[method](request);
 }

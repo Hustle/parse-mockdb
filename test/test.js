@@ -961,9 +961,26 @@ describe('ParseMock', function(){
     });
   });
 
-  it('should handle the user class', function(done) {
+  it('should handle the User class', function(done) {
     var user = new Parse.User({name: "Turtle"});
     user.save().then((savedUser) => {
+      return (new Parse.Query(Parse.User).find())
+    }).then((foundUsers) => {
+      assert.equal(foundUsers.length, 1);
+      assert.equal(foundUsers[0].get('name'), "Turtle");
+      done();
+    })
+  })
+
+  it('should handle the Role class', function(done) {
+    var roleACL = new Parse.ACL();
+    roleACL.setPublicReadAccess(true);
+    var user = new Parse.Role("Turtle", roleACL);
+    user.save().then((savedRole) => {
+      return (new Parse.Query(Parse.Role).find())
+    }).then((foundRoles) => {
+      assert.equal(foundRoles.length, 1);
+      assert.equal(foundRoles[0].get('name'), "Turtle");
       done();
     })
   })
