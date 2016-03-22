@@ -930,4 +930,42 @@ describe('ParseMock', function(){
     });
   });
 
+  it('should handle a direct query on a relation field', function(done) {
+    var store = new Store({name: "store 1"});
+    var store2 = new Store({name: "store 2"});
+    var tpId;
+
+    var paperTowels = createItemP(20, 'paper towels');
+    var toothPaste = createItemP(30, 'tooth paste');
+    var toothBrush = createItemP(50, 'tooth brush');
+    Parse.Promise.when(
+      paperTowels,
+      toothPaste,
+      toothBrush,
+      store,
+      store2
+    ).then((paperTowels, toothPaste, toothBrush) => {
+      tpId = toothPaste.id;
+      var relation = store2.relation('items');
+      relation.add(paperTowels);
+      relation.add(toothPaste);
+      return store2.save()
+    }).then(() => {
+      var query = new Parse.Query(Store);
+      query.equalTo('items', Item.createWithoutData(tpId));
+      return query.find();
+    }).then((results) => {
+      assert.equal(results.length, 1);
+      assert.equal(results[0].get('name'), "store 2");
+      done();
+    });
+  });
+
+  it('should handle the user class', function(done) {
+    var user = new Parse.User({name: "Turtle"});
+    user.save().then((savedUser) => {
+      done();
+    })
+  })
+
 });
