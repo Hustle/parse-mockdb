@@ -917,7 +917,7 @@ describe('ParseMock', function(){
       var query = relation.query();
       return query.find();
     }).then((items) => {
-      assert(items.length === 2);
+      assert.equal(items.length, 2);
       var relation = store.relation('items');
       relation.remove(items[1]);
       return store.save();
@@ -975,14 +975,34 @@ describe('ParseMock', function(){
   it('should handle the Role class', function(done) {
     var roleACL = new Parse.ACL();
     roleACL.setPublicReadAccess(true);
-    var user = new Parse.Role("Turtle", roleACL);
-    user.save().then((savedRole) => {
+    var role = new Parse.Role("Turtle", roleACL);
+    role.save().then((savedRole) => {
       return (new Parse.Query(Parse.Role).find())
     }).then((foundRoles) => {
       assert.equal(foundRoles.length, 1);
       assert.equal(foundRoles[0].get('name'), "Turtle");
       done();
     })
+  })
+
+  it('should handle redirectClassNameForKey', function(done) {
+    var user = new Parse.User({name: "T Rutlidge"})
+    user.save().then((savedUser) => {
+      var roleACL = new Parse.ACL();
+      roleACL.setPublicReadAccess(true);
+
+      var role = new Parse.Role("Turtle", roleACL);
+      role.getUsers().add(savedUser);
+      return role.save();
+    }).then((savedRole) => {
+      return (new Parse.Query(Parse.Role)).equalTo('name', 'Turtle').first();
+    }).then((foundRole) => {
+      return foundRole.getUsers().query().find();
+    }).then((foundUsers) => {
+      assert.equal(foundUsers.length, 1);
+      assert.equal(foundUsers[0].get('name'), "T Rutlidge");
+      done();
+    });
   })
 
 });

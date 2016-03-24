@@ -23,6 +23,8 @@ var db = {};
 var hooks = {};
 var masks = {};
 
+var indirect = null;
+var outOfBandResults = null;
 var default_controller = null;
 var mocked = false;
 
@@ -313,7 +315,7 @@ function respond(status, response) {
  */
 function handleGetRequest(request) {
   const objId = request.objectId ;
-  const className = request.className;
+  var className = request.className;
   if (objId) {
     // Object.fetch() query
     const collection = getCollection(className);
@@ -328,13 +330,20 @@ function handleGetRequest(request) {
     return Parse.Promise.as(respond(200, match));
   }
 
-  var matches = recursivelyMatch(className, request.data.where);
+  const data = request.data;
+  indirect = data.redirectClassNameForKey
+
+  var matches = recursivelyMatch(className, data.where);
+
+  if (indirect) {
+    matches = outOfBandResults;
+  }
 
   if (request.data.count) {
     return Parse.Promise.as(respond(200, { count: matches.length}));
   }
 
-  matches = queryMatchesAfterIncluding(matches, request.data.include);
+  matches = queryMatchesAfterIncluding(matches, data.include);
 
   const toOmit = Array.from(getMask(className));
   matches = matches.map((match) =>  _.omit(match, toOmit));
@@ -349,8 +358,8 @@ function handleGetRequest(request) {
     }
   })
 
-  var limit = request.data.limit || DEFAULT_LIMIT;
-  var startIndex = request.data.skip || 0;
+  var limit = data.limit || DEFAULT_LIMIT;
+  var startIndex = data.skip || 0;
   var endIndex = startIndex + limit;
   var response = { results: matches.slice(startIndex, endIndex) };
   return Parse.Promise.as(respond(200, response));
@@ -649,9 +658,14 @@ const QUERY_OPERATORS = {
     var id = object.objectId;
     var relatedKey = value.key;
     var relations = getCollection(className)[id][relatedKey];
-    return _.some(relations, relation => {
-      return objectsAreEqual(this, relation);
-    });
+    if (indirect) {
+      outOfBandResults = relations.reduce((results, relation) => {
+        var matches = recursivelyMatch(relations[0].className, relation);
+        return results.concat(matches);
+      }, new Array());
+    } else {
+      return objectsAreEqual(relations, this);
+    }
   },
 }
 
@@ -681,11 +695,6 @@ function objectsAreEqual(obj1, obj2) {
     return true;
   }
 
-  // objects with ids
-  if (obj1.id !== undefined && obj1.id == obj2.id) {
-    return true;
-  }
-
   // objects
   if (_.isEqual(obj1, obj2)) {
     return true;
@@ -704,14 +713,6 @@ function objectsAreEqual(obj1, obj2) {
   // both dates
   if (isDate(obj1) && isDate(obj2)) {
     return deserializeQueryParam(obj1) === deserializeQueryParam(obj2);
-  }
-
-  // one pointer, one object
-  if (obj1.objectId !== undefined && obj1.objectId === obj2.objectId) {
-    return true;
-  }
-  if (obj2.objectId !== undefined && obj2.objectId === obj1.objectId) {
-    return true;
   }
 
   return false;
