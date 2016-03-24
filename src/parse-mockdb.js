@@ -707,9 +707,10 @@ function objectsAreEqual(obj1, obj2) {
   }
 
   // one pointer, one object
-  if (obj1.id !== undefined && obj1.id == obj2.objectId) {
+  if (obj1.objectId !== undefined && obj1.objectId === obj2.objectId) {
     return true;
-  } else if (obj2.id !== undefined && obj2.id == obj1.objectId) {
+  }
+  if (obj2.objectId !== undefined && obj2.objectId === obj1.objectId) {
     return true;
   }
 
