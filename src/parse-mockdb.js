@@ -657,7 +657,7 @@ const QUERY_OPERATORS = {
     var className = object.className;
     var id = object.objectId;
     var relatedKey = value.key;
-    var relations = getCollection(className)[id][relatedKey];
+    var relations = getCollection(className)[id][relatedKey] || [];
     if (indirect) {
       outOfBandResults = relations.reduce((results, relation) => {
         var matches = recursivelyMatch(relations[0].className, relation);
