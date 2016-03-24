@@ -336,6 +336,9 @@ function handleGetRequest(request) {
 
   matches = queryMatchesAfterIncluding(matches, request.data.include);
 
+  const toOmit = Array.from(getMask(className));
+  matches = matches.map((match) =>  _.omit(match, toOmit));
+
   // TODO: Can we just call toJSON() in order to avoid this?
   matches.forEach(match => {
     if (match.createdAt) {
