@@ -59,7 +59,7 @@ function cleanUp() {
 }
 
 /**
- * Registers a hook to on a class denoted by className.
+ * Registers a hook on a class denoted by className.
  *
  * @param {string} className The name of the class to register hook on.
  * @param {string} hookType One of 'beforeSave', 'afterSave', 'beforeDelete', 'afterDelete'
