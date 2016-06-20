@@ -287,6 +287,7 @@ function normalizePath(path) {
 const SPECIAL_CLASS_NAMES = {
   roles: '_Role',
   users: '_User',
+  push: '_Push'
 }
 
 function handleRequest(method, path, body) {
@@ -500,7 +501,9 @@ function includePaths(object, pathsRemaining) {
         return fetched;
       })
     } else {
-      object[path] = fetchObjectByPointer(target);
+      if (object[path].__type == 'Pointer') {
+        object[path] = fetchObjectByPointer(target);
+      }
       includePaths(object[path], pathsRemaining);
     }
   }

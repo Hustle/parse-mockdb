@@ -285,6 +285,43 @@ describe('ParseMock', function(){
     });
   });
 
+  it("should handle multiple nested includes", function(done) {
+    var a1, a2, b, c;
+    Parse.Promise.when(
+        new Parse.Object('a', {value: '1'}).save(),
+        new Parse.Object('a', {value: '2'}).save())
+    .then(function(savedA1, savedA2) {
+      a1 = savedA1;
+      a2 = savedA2;
+      return new Parse.Object('b', {a1, a2}).save();
+    })
+    .then(function(savedB) {
+      b = savedB;
+      return new Parse.Object('c', {b}).save();
+    })
+    .then(function(savedC) {
+      c = savedC;
+      return new Parse.Query('c')
+          .include('b')
+          .include('b.a1')
+          .include('b.a2')
+          .first();
+    })
+    .then(function(loadedC) {
+      assert(loadedC.id == c.id);
+      assert(loadedC.get('b').id == b.id);
+      assert(loadedC.get('b').get('a1').id == a1.id);
+      assert(loadedC.get('b').get('a2').id == a2.id);
+      assert(loadedC.get('b').get('a1').get('value') == a1.get('value'));
+      assert(loadedC.get('b').get('a2').get('value') == a2.get('value'));
+
+      done();
+    })
+    .then(null, function(err) {
+      done(err);
+    })
+  });
+
   it('should handle includes over arrays of pointers', function(done) {
     var item1 = new Item({cool: true});
     var item2 = new Item({cool: false});
