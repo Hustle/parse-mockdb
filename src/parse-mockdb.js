@@ -315,7 +315,7 @@ function respond(status, response) {
  * Handles a GET request (Parse.Query.find(), get(), first(), Parse.Object.fetch())
  */
 function handleGetRequest(request) {
-  const objId = request.objectId ;
+  const objId = request.objectId;
   var className = request.className;
   if (objId) {
     // Object.fetch() query
@@ -549,11 +549,6 @@ function queryFilter(where) {
   }
 
   return function(object) {
-    if (where.objectId && typeof where.objectId !== "object") {
-      // this is a get() request. simply match on ID
-      return object.objectId === where.objectId;
-    }
-
     // Go through each key in where clause
     return _.reduce(where, function(result, whereParams, key) {
       var match = evaluateObject(object, whereParams, key);
@@ -663,7 +658,9 @@ const QUERY_OPERATORS = {
     var relations = getCollection(className)[id][relatedKey];
     if (indirect) {
       outOfBandResults = relations.reduce((results, relation) => {
-        var matches = recursivelyMatch(relations[0].className, relation);
+        var matches = recursivelyMatch(relations[0].className, {
+          objectId: relation.objectId
+        });
         return results.concat(matches);
       }, new Array());
     } else {

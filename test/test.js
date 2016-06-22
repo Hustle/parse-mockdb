@@ -410,6 +410,53 @@ describe('ParseMock', function(){
     })
   });
 
+  it("should do a fetch query", function(done) {
+    let savedItem;
+    new Item().save({price: 30}).then(function(item1) {
+      savedItem = item1;
+      return Item.createWithoutData(item1.id).fetch()
+    }).then(function(fetched) {
+      assert.equal(fetched.id, savedItem.id);
+      assert.equal(fetched.get('price'), 30);
+    }).then(() => done(), (err) => done(err));
+  });
+
+  it("should find with objectId", function(done) {
+    let savedItem;
+    new Item().save({price: 30}).then(function(item1) {
+      savedItem = item1;
+      return new Parse.Query(Item).equalTo('objectId', item1.id).first();
+    }).then(function(fetched) {
+      assert.equal(fetched.id, savedItem.id);
+      assert.equal(fetched.get('price'), 30);
+    }).then(() => done(), (err) => done(err));
+  });
+
+  it("should get objectId", function(done) {
+    let savedItem;
+    new Item().save({price: 30}).then(function(item1) {
+      savedItem = item1;
+      return new Parse.Query(Item).get(item1.id);
+    }).then(function(fetched) {
+      assert.equal(fetched.id, savedItem.id);
+      assert.equal(fetched.get('price'), 30);
+    }).then(() => done(), (err) => done(err));
+  });
+
+  it("should find with objectId and where", function(done) {
+    Parse.Promise.when(
+      new Item().save({price: 30}),
+      new Item().save({name: 'Device'})
+    ).then(function(item1, item2) {
+      var itemQuery = new Parse.Query(Item);
+      itemQuery.exists('nonExistant');
+      itemQuery.equalTo('objectId', item1.id);
+      return itemQuery.find().then(function(items) {
+        assert.equal(items.length, 0);
+      });
+    }).then(() => done(), (err) => done(err));
+  });
+
   it("should match a correct when exists query", function(done) {
     Parse.Promise.when(
       new Item().save({price: 30}),
@@ -1038,8 +1085,7 @@ describe('ParseMock', function(){
     }).then((foundUsers) => {
       assert.equal(foundUsers.length, 1);
       assert.equal(foundUsers[0].get('name'), "T Rutlidge");
-      done();
-    });
+    }).then(() => done(), err => done(err));
   })
 
 });
