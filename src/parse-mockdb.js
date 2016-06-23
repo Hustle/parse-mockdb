@@ -104,12 +104,22 @@ function runHook(className, hookType, data) {
     const modelData = Object.assign(new Object, data, {className});
     const model = Parse.Object.fromJSON(modelData);
 
-    return hook.bind(model)().then((result) => {
-      debugPrint('HOOK', result);
-      return Parse.Promise.as(result.toJSON());
+    // TODO Stub out Parse.Cloud.useMasterKey() so that we can report the correct 'master'
+    // value here.
+    return hook(makeRequestObject(model, false)).done(() => {
+      return Parse.Promise.as(_.omit(model, "ACL"));
     });
   }
   return Parse.Promise.as(data);
+}
+
+function makeRequestObject(model, useMasterKey) {
+  return {
+      installationId: 'parse-mockdb',
+      master: useMasterKey,
+      object: model,
+      user: "ParseMockDB doesn't define request.user."
+    };
 }
 
 // Destructive. Takes data for update operation and removes all atomic operations.
@@ -438,8 +448,10 @@ function handleDeleteRequest(request) {
   const collection = getCollection(request.className);
   var objToDelete = collection[request.objectId];
 
-  delete collection[request.objectId]
-  return Parse.Promise.as(respond(200, {}));
+  return runHook(request.className, 'beforeDelete', objToDelete).then(result => {
+    delete collection[request.objectId];
+    return Parse.Promise.as(respond(200, {}));
+  });
 }
 
 function makePointer(className, id) {
