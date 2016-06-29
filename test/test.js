@@ -64,7 +64,7 @@ describe('ParseMock', function(){
 
   it("should save correctly", function(done) {
     createItemP(30).then(function(item) {
-      assert(item.get("price") == 30);
+      assert.equal(item.get("price"), 30);
       done();
     });
   });
@@ -78,14 +78,14 @@ describe('ParseMock', function(){
     }).then((fetched) => {
       assert.equal(createdAt.getTime(), fetched.createdAt.getTime());
       done();
-    })
-  })
+    });
+  });
 
   it("should get a specific ID correctly", function(done) {
     createItemP(30).then(function(item) {
       const query = new Parse.Query(Item);
       query.get(item.id).then(function(fetchedItem) {
-        assert(fetchedItem.id == item.id);
+        assert.equal(fetchedItem.id, item.id);
         done();
       });
     });
@@ -94,8 +94,8 @@ describe('ParseMock', function(){
   it("should match a correct equalTo query on price", function(done) {
     createItemP(30).then(function(item) {
       itemQueryP(30).then(function(results) {
-        assert(results[0].id == item.id);
-        assert(results[0].get("price") == item.get("price"));
+        assert.equal(results[0].id, item.id);
+        assert.equal(results[0].get("price"), item.get("price"));
         done();
       });
     });
@@ -108,7 +108,7 @@ describe('ParseMock', function(){
       const query = new Parse.Query(Item);
       query.equalTo("price", 30);
       return query.first().then(function(item) {
-        assert(item.get("price") == 30);
+        assert.equal(item.get("price"), 30);
         done();
       });
     });
@@ -122,9 +122,9 @@ describe('ParseMock', function(){
       return query.first().then(function(item) {
         assert(item.get('cool').awesome);
         done();
-      })
-    })
-  })
+      });
+    });
+  });
 
   it('should support increment', function(done) {
     createItemP(30).then(function(item) {
@@ -204,13 +204,13 @@ describe('ParseMock', function(){
     const item2 = new Item();
     item2.set("price", 30);
     Parse.Object.saveAll([item, item2]).then(function(items) {
-      assert(items.length === 2);
+      assert.equal(items.length, 2);
       const query = new Parse.Query(Item);
       query.equalTo("price", 30);
       return query.find().then(function(items) {
-        assert(items.length === 2);
-        assert(items[0].get("price") === 30);
-        assert(items[1].get("price") === 30);
+        assert.equal(items.length, 2);
+        assert.equal(items[0].get("price"), 30);
+        assert.equal(items[1].get("price"), 30);
         done();
       });
     });
@@ -229,7 +229,7 @@ describe('ParseMock', function(){
 
       const orQuery = Parse.Query.or(query, otherQuery);
       return orQuery.find().then(function(items) {
-        assert(items[0].id == item.id);
+        assert.equal(items[0].id, item.id);
         done();
       });
     });
@@ -248,7 +248,7 @@ describe('ParseMock', function(){
 
       const orQuery = Parse.Query.or(query, otherQuery);
       return orQuery.find().then(function(items) {
-        assert(items.length == 0);
+        assert.equal(items.length, 0);
         done();
       });
     });
@@ -258,7 +258,7 @@ describe('ParseMock', function(){
     Parse.Promise.when(createItemP(30), createItemP(20)).then(function(item1, item2) {
       const query = new Parse.Query(Item);
       return query.first().then(function(item) {
-        assert(item.get("price") == 30);
+        assert.equal(item.get("price"), 30);
         done();
       });
     });
@@ -275,9 +275,9 @@ describe('ParseMock', function(){
           query.first().then(function(result) {
             const resultItem = result.get("item");
             const resultBrand = resultItem.get("brand");
-            assert(resultItem.id == item.id);
-            assert(resultBrand.get("name") == "Acme");
-            assert(resultBrand.id == brand.id);
+            assert.equal(resultItem.id, item.id);
+            assert.equal(resultBrand.get("name"), "Acme");
+            assert.equal(resultBrand.id, brand.id);
             done();
           });
         });
@@ -308,18 +308,18 @@ describe('ParseMock', function(){
           .first();
     })
     .then(function(loadedC) {
-      assert(loadedC.id == c.id);
-      assert(loadedC.get('b').id == b.id);
-      assert(loadedC.get('b').get('a1').id == a1.id);
-      assert(loadedC.get('b').get('a2').id == a2.id);
-      assert(loadedC.get('b').get('a1').get('value') == a1.get('value'));
-      assert(loadedC.get('b').get('a2').get('value') == a2.get('value'));
+      assert.equal(loadedC.id, c.id);
+      assert.equal(loadedC.get('b').id, b.id);
+      assert.equal(loadedC.get('b').get('a1').id, a1.id);
+      assert.equal(loadedC.get('b').get('a2').id, a2.id);
+      assert.equal(loadedC.get('b').get('a1').get('value'), a1.get('value'));
+      assert.equal(loadedC.get('b').get('a2').get('value'), a2.get('value'));
 
       done();
     })
     .then(null, function(err) {
       done(err);
-    })
+    });
   });
 
   it('should handle includes over arrays of pointers', function(done) {
@@ -338,8 +338,8 @@ describe('ParseMock', function(){
       assert(brand.get('items')[0].get('cool'));
       assert(!brand.get('items')[1].get('cool'));
       done();
-    })
-  })
+    });
+  });
 
   it('should handle nested includes over arrays of pointers', function(done) {
     const store = new Store({location: "SF"});
@@ -358,8 +358,8 @@ describe('ParseMock', function(){
       assert.equal(brand.get('items')[0].get("store").get("location"), "SF");
       assert(!brand.get('items')[1].get('cool'));
       done();
-    })
-  })
+    });
+  });
 
   it('should handle includes where item is missing', function(done) {
     const item = new Item({cool: true});
@@ -372,8 +372,8 @@ describe('ParseMock', function(){
       assert(!brands[0].has('item'));
       assert(brands[1].has('item'));
       done();
-    })
-  })
+    });
+  });
 
   it('should handle includes where nested array item is missing', function(done) {
     const store = new Store({location: "SF"});
@@ -392,8 +392,8 @@ describe('ParseMock', function(){
       assert(brand.get('items')[0].get('cool'));
       assert(!brand.get('items')[1].get('cool'));
       done();
-    })
-  })
+    });
+  });
 
   it('should handle delete', function(done) {
     const item = new Item();
@@ -407,7 +407,7 @@ describe('ParseMock', function(){
     }).then(function(foundItem) {
       assert(!foundItem);
       done();
-    })
+    });
   });
 
   it("should do a fetch query", function(done) {
@@ -465,8 +465,8 @@ describe('ParseMock', function(){
       const itemQuery = new Parse.Query(Item);
       itemQuery.exists('price');
       itemQuery.find().then(function(items) {
-        assert(items.length === 1);
-        assert(items[0].id === item1.id);
+        assert.equal(items.length, 1);
+        assert.equal(items[0].id, item1.id);
         done();
       });
     });
@@ -480,8 +480,8 @@ describe('ParseMock', function(){
       const itemQuery = new Parse.Query(Item);
       itemQuery.doesNotExist('price');
       itemQuery.find().then(function(itmes) {
-        assert(itmes.length === 1);
-        assert(itmes[0].id === item2.id);
+        assert.equal(itmes.length, 1);
+        assert.equal(itmes[0].id, item2.id);
         done();
       });
     });
@@ -496,18 +496,8 @@ describe('ParseMock', function(){
         query.equalTo("item", item);
         query.find().then(function(results) {
           assert.equal(results[0].id, savedStore.id);
-          assert(results[0].id == savedStore.id);
           done();
         });
-      });
-    });
-  });
-
-  it("should not match an incorrect equalTo query on price", function(done) {
-    createItemP(30).then(function(item) {
-      itemQueryP(20).then(function(results) {
-        assert.equal(results.length, 0);
-        done();
       });
     });
   });
@@ -587,9 +577,9 @@ describe('ParseMock', function(){
       query.first().then(function(result) {
         assert(result.get("bornOnDate", bornOnDate));
         done();
-      })
-    })
-  })
+      });
+    });
+  });
 
   it('should properly handle date in query operator', function(done) {
     const bornOnDate = new Date();
@@ -610,9 +600,9 @@ describe('ParseMock', function(){
       query.first().then(function(result) {
         assert(result);
         done();
-      })
-    })
-  })
+      });
+    });
+  });
 
   it("should handle $nin", function(done) {
     Parse.Promise.when(createItemP(20), createItemP(30)).then(function(item1, item2) {
@@ -624,7 +614,7 @@ describe('ParseMock', function(){
       assert.equal(results[0].get("price"), 20);
       done();
     }, function(error) {console.log(error)})
-  })
+  });
 
   it("should handle $nin on objectId", function(done) {
     createItemP(30).then(function(item) {
@@ -634,8 +624,8 @@ describe('ParseMock', function(){
     }).then(function(results) {
       assert.equal(results.length, 0);
       done();
-    })
-  })
+    });
+  });
 
   it("should handle $nin with an empty array", function(done) {
     createItemP(30).then(function(item) {
@@ -645,8 +635,8 @@ describe('ParseMock', function(){
     }).then(function(results) {
       assert.equal(results.length, 1);
       done();
-    })
-  })
+    });
+  });
 
   it("should handle $regex queries", function(done) {
     createBrandP("Acme").then(function(item) {
@@ -656,8 +646,8 @@ describe('ParseMock', function(){
     }).then(function(results) {
       assert.equal(results.length, 1);
       done();
-    })
-  })
+    });
+  });
 
 /**
  *  see: https://github.com/ParsePlatform/Parse-SDK-JS/issues/91
@@ -672,7 +662,7 @@ describe('ParseMock', function(){
           query.first().then(function(str) {
             str.set("lol", "wut");
             str.save().then(function(newStore) {
-              assert(str.get("item").get("brand").get("name") === brand.get("name"));
+              assert.equal(str.get("item").get("brand").get("name"), brand.get("name"));
               done();
             });
           });
@@ -848,11 +838,11 @@ describe('ParseMock', function(){
           storeQuery.find().then(function(store) {
             assert(store);
             done();
-          })
+          });
         });
-      })
-    })
-  })
+      });
+    });
+  });
 
   it('should correctly count items in a matchesQuery', function(done) {
     createBrandP("Acme").then(function(brand) {
@@ -864,7 +854,7 @@ describe('ParseMock', function(){
           const storeQuery = new Parse.Query(Store);
           storeQuery.matchesQuery("item", itemQuery);
           storeQuery.count().then(function(storeCount) {
-            assert(storeCount === 1);
+            assert.equal(storeCount, 1);
             done();
           });
         });
@@ -878,13 +868,13 @@ describe('ParseMock', function(){
         const brandQuery = new Parse.Query(Brand);
         brandQuery.limit(1);
         brandQuery.find().then(function(brands) {
-          assert(brands.length === 1);
+          assert.equal(brands.length, 1);
           const brandQuery2 = new Parse.Query(Brand);
           brandQuery2.limit(1);
           brandQuery2.skip(1);
           brandQuery2.find().then(function(moreBrands) {
-            assert(moreBrands.length === 1);
-            assert(moreBrands[0].id !== brands[0].id);
+            assert.equal(moreBrands.length, 1);
+            assert.notEqual(moreBrands[0].id, brands[0].id);
             done();
           });
         });
@@ -954,7 +944,7 @@ describe('ParseMock', function(){
       const brand = new Brand({error: true});
 
       brand.save().then(function(savedBrand) {
-        throw new Error("should not have saved")
+        assert.fail(null, null, "should not have saved");
       }, function(error) {
         assert.equal(error, "whoah");
         done();
@@ -1003,7 +993,7 @@ describe('ParseMock', function(){
       brand.save().done(function(savedBrand) {
         return Parse.Object.destroyAll([savedBrand]);
       }).then(function(deletedBrand) {
-        throw new Error("should not have deleted")
+        assert.fail(null, null, "should not have deleted");
       }, function(error) {
         assert.equal(error, "whoah");
         return new Parse.Query(Brand).find();
@@ -1012,7 +1002,6 @@ describe('ParseMock', function(){
         done();
       });
     });
-
   });
 
   it('successfully uses containsAll query', function(done) {
@@ -1025,12 +1014,12 @@ describe('ParseMock', function(){
         query.containsAll("items", [item1.toPointer(), item2.toPointer()]);
         return query.find();
       }).then(stores => {
-        assert(stores.length === 1);
+        assert.equal(stores.length, 1);
         const query = new Parse.Query(Store);
         query.containsAll("items", [item2.toPointer(), 4]);
         return query.find();
       }).then(stores => {
-        assert(stores.length === 0);
+        assert.equal(stores.length, 0);
         done();
       });
     });
@@ -1109,8 +1098,8 @@ describe('ParseMock', function(){
       assert.equal(foundUsers.length, 1);
       assert.equal(foundUsers[0].get('name'), "Turtle");
       done();
-    })
-  })
+    });
+  });
 
   it('should handle the Role class', function(done) {
     const roleACL = new Parse.ACL();
@@ -1122,8 +1111,8 @@ describe('ParseMock', function(){
       assert.equal(foundRoles.length, 1);
       assert.equal(foundRoles[0].get('name'), "Turtle");
       done();
-    })
-  })
+    });
+  });
 
   it('should handle redirectClassNameForKey', function(done) {
     const user = new Parse.User({name: "T Rutlidge"})
@@ -1142,5 +1131,5 @@ describe('ParseMock', function(){
       assert.equal(foundUsers.length, 1);
       assert.equal(foundUsers[0].get('name'), "T Rutlidge");
     }).then(() => done(), err => done(err));
-  })
+  });
 });
