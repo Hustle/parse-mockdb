@@ -7,7 +7,8 @@
     "node": ">=5.0.0"
   },
   "scripts": {
-    "test": "mocha ./test/test"
+    "test": "mocha ./test/test",
+    "lint": "eslint src/** test/**"
   },
   "repository": {
     "type": "git",
@@ -35,5 +36,18 @@
   },
   "directories": {
     "test": "test"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 6
+    },
+    "env": {
+      "node": true,
+      "mocha": true
+    },
+    "rules": {
+      "semi": ["error", "always"],
+      "space-before-function-paren": ["error", "never"]
+    }
   }
 }
