@@ -1,8 +1,8 @@
 'use strict';
 
-var assert = require("assert")
-var ParseMockDB = require('../src/parse-mockdb');
-var Parse = require('parse/node');
+const assert = require("assert");
+const ParseMockDB = require('../src/parse-mockdb');
+const Parse = require('parse/node');
 
 class Brand extends Parse.Object {
   constructor(attributes, options) {
@@ -26,13 +26,13 @@ class Store extends Parse.Object {
 Parse.Object.registerSubclass('Store', Store);
 
 function createBrandP(name) {
-  var brand = new Brand();
+  const brand = new Brand();
   brand.set("name", name);
   return brand.save();
 }
 
 function createItemP(price, brand) {
-  var item = new Item();
+  const item = new Item();
   item.set("price", price);
 
   if (brand) {
@@ -42,13 +42,13 @@ function createItemP(price, brand) {
 }
 
 function createStoreWithItemP(item) {
-  var store = new Store();
+  const store = new Store();
   store.set("item", item);
   return store.save();
 }
 
 function itemQueryP(price) {
-  var query = new Parse.Query(Item);
+  const query = new Parse.Query(Item);
   query.equalTo("price", price);
   return query.find();
 }
@@ -83,7 +83,7 @@ describe('ParseMock', function(){
 
   it("should get a specific ID correctly", function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.get(item.id).then(function(fetchedItem) {
         assert(fetchedItem.id == item.id);
         done();
@@ -102,10 +102,10 @@ describe('ParseMock', function(){
   });
 
   it('should save and find an item', function(done) {
-    var item = new Item();
+    const item = new Item();
     item.set("price", 30);
     item.save().then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo("price", 30);
       return query.first().then(function(item) {
         assert(item.get("price") == 30);
@@ -115,9 +115,9 @@ describe('ParseMock', function(){
   });
 
   it('should save and find an item via object comparison', function(done) {
-    var item = new Item({cool: {awesome: true } });
+    const item = new Item({cool: {awesome: true } });
     item.save().then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo('cool', {awesome: true});
       return query.first().then(function(item) {
         assert(item.get('cool').awesome);
@@ -198,14 +198,14 @@ describe('ParseMock', function(){
   });
 
   it('should saveAll and find 2 items', function(done) {
-    var item = new Item();
+    const item = new Item();
     item.set("price", 30);
 
-    var item2 = new Item();
+    const item2 = new Item();
     item2.set("price", 30);
     Parse.Object.saveAll([item, item2]).then(function(items) {
       assert(items.length === 2);
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo("price", 30);
       return query.find().then(function(items) {
         assert(items.length === 2);
@@ -217,17 +217,17 @@ describe('ParseMock', function(){
   });
 
   it('should find an item matching an or query', function(done) {
-    var Item = Parse.Object.extend("Item");
-    var item = new Item();
+    const Item = Parse.Object.extend("Item");
+    const item = new Item();
     item.set("price", 30);
     item.save().then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo("price", 30);
 
-      var otherQuery = new Parse.Query(Item);
+      const otherQuery = new Parse.Query(Item);
       otherQuery.equalTo("name", "Chicken");
 
-      var orQuery = Parse.Query.or(query, otherQuery);
+      const orQuery = Parse.Query.or(query, otherQuery);
       return orQuery.find().then(function(items) {
         assert(items[0].id == item.id);
         done();
@@ -236,17 +236,17 @@ describe('ParseMock', function(){
   });
 
   it('should not find any items if they do not match an or query', function(done) {
-    var Item = Parse.Object.extend("Item");
-    var item = new Item();
+    const Item = Parse.Object.extend("Item");
+    const item = new Item();
     item.set("price", 30);
     item.save().then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo("price", 50);
 
-      var otherQuery = new Parse.Query(Item);
+      const otherQuery = new Parse.Query(Item);
       otherQuery.equalTo("name", "Chicken");
 
-      var orQuery = Parse.Query.or(query, otherQuery);
+      const orQuery = Parse.Query.or(query, otherQuery);
       return orQuery.find().then(function(items) {
         assert(items.length == 0);
         done();
@@ -256,7 +256,7 @@ describe('ParseMock', function(){
 
   it('should save 2 items and get one for a first() query', function(done) {
     Parse.Promise.when(createItemP(30), createItemP(20)).then(function(item1, item2) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       return query.first().then(function(item) {
         assert(item.get("price") == 30);
         done();
@@ -267,14 +267,14 @@ describe('ParseMock', function(){
   it("should handle nested includes", function(done) {
     createBrandP("Acme").then(function(brand) {
       createItemP(30, brand).then(function(item) {
-        var brand = item.get("brand");
+        const brand = item.get("brand");
         createStoreWithItemP(item).then(function(savedStore) {
-          var query = new Parse.Query(Store);
+          const query = new Parse.Query(Store);
           query.include("item");
           query.include("item.brand");
           query.first().then(function(result) {
-            var resultItem = result.get("item");
-            var resultBrand = resultItem.get("brand");
+            const resultItem = result.get("item");
+            const resultBrand = resultItem.get("brand");
             assert(resultItem.id == item.id);
             assert(resultBrand.get("name") == "Acme");
             assert(resultBrand.id == brand.id);
@@ -323,16 +323,16 @@ describe('ParseMock', function(){
   });
 
   it('should handle includes over arrays of pointers', function(done) {
-    var item1 = new Item({cool: true});
-    var item2 = new Item({cool: false});
-    var items = [item1, item2];
+    const item1 = new Item({cool: true});
+    const item2 = new Item({cool: false});
+    const items = [item1, item2];
     Parse.Object.saveAll(items).then(function(savedItems) {
-      var brand = new Brand({
+      const brand = new Brand({
         items: items
       });
       return brand.save();
     }).then(function() {
-      var q = new Parse.Query(Brand).include('items');
+      const q = new Parse.Query(Brand).include('items');
       return q.first();
     }).then(function(brand) {
       assert(brand.get('items')[0].get('cool'));
@@ -342,17 +342,17 @@ describe('ParseMock', function(){
   })
 
   it('should handle nested includes over arrays of pointers', function(done) {
-    var store = new Store({location: "SF"});
-    var item1 = new Item({cool: true, store: store});
-    var item2 = new Item({cool: false});
-    var items = [item1, item2];
+    const store = new Store({location: "SF"});
+    const item1 = new Item({cool: true, store: store});
+    const item2 = new Item({cool: false});
+    const items = [item1, item2];
     Parse.Object.saveAll(items.concat([store])).then(function(savedItems) {
-      var brand = new Brand({
+      const brand = new Brand({
         items: items
       });
       return brand.save();
     }).then(function() {
-      var q = new Parse.Query(Brand).include('items,items.store');
+      const q = new Parse.Query(Brand).include('items,items.store');
       return q.first();
     }).then(function(brand) {
       assert.equal(brand.get('items')[0].get("store").get("location"), "SF");
@@ -362,11 +362,11 @@ describe('ParseMock', function(){
   })
 
   it('should handle includes where item is missing', function(done) {
-    var item = new Item({cool: true});
-    var brand1 = new Brand({});
-    var brand2 = new Brand({item: item});
+    const item = new Item({cool: true});
+    const brand1 = new Brand({});
+    const brand2 = new Brand({item: item});
     Parse.Object.saveAll([item, brand1, brand2]).then(function() {
-      var q = new Parse.Query(Brand).include('item');
+      const q = new Parse.Query(Brand).include('item');
       return q.find();
     }).then(function(brands) {
       assert(!brands[0].has('item'));
@@ -376,17 +376,17 @@ describe('ParseMock', function(){
   })
 
   it('should handle includes where nested array item is missing', function(done) {
-    var store = new Store({location: "SF"});
-    var item1 = new Item({cool: true, store: store});
-    var item2 = new Item({cool: false});
-    var items = [item1, item2];
+    const store = new Store({location: "SF"});
+    const item1 = new Item({cool: true, store: store});
+    const item2 = new Item({cool: false});
+    const items = [item1, item2];
     Parse.Object.saveAll(items.concat([store])).then(function(savedItems) {
-      var brand = new Brand({
+      const brand = new Brand({
         items: items
       });
       return brand.save();
     }).then(function() {
-      var q = new Parse.Query(Brand).include('items,items.blah,wow');
+      const q = new Parse.Query(Brand).include('items,items.blah,wow');
       return q.first();
     }).then(function(brand) {
       assert(brand.get('items')[0].get('cool'));
@@ -396,7 +396,7 @@ describe('ParseMock', function(){
   })
 
   it('should handle delete', function(done) {
-    var item = new Item();
+    const item = new Item();
     item.save().then(function(item) {
       return new Parse.Query(Item).first();
     }).then(function(foundItem) {
@@ -448,7 +448,7 @@ describe('ParseMock', function(){
       new Item().save({price: 30}),
       new Item().save({name: 'Device'})
     ).then(function(item1, item2) {
-      var itemQuery = new Parse.Query(Item);
+      const itemQuery = new Parse.Query(Item);
       itemQuery.exists('nonExistant');
       itemQuery.equalTo('objectId', item1.id);
       return itemQuery.find().then(function(items) {
@@ -462,7 +462,7 @@ describe('ParseMock', function(){
       new Item().save({price: 30}),
       new Item().save({name: 'Device'})
     ).then(function(item1, item2) {
-      var itemQuery = new Parse.Query(Item);
+      const itemQuery = new Parse.Query(Item);
       itemQuery.exists('price');
       itemQuery.find().then(function(items) {
         assert(items.length === 1);
@@ -477,7 +477,7 @@ describe('ParseMock', function(){
       new Item().save({price: 30}),
       new Item().save({name: 'Device'})
     ).then(function(item1, item2) {
-      var itemQuery = new Parse.Query(Item);
+      const itemQuery = new Parse.Query(Item);
       itemQuery.doesNotExist('price');
       itemQuery.find().then(function(itmes) {
         assert(itmes.length === 1);
@@ -489,10 +489,10 @@ describe('ParseMock', function(){
 
   it("should match a correct equalTo query for an object", function(done) {
     createItemP(30).then(function(item) {
-      var store = new Store();
+      const store = new Store();
       store.set("item", item);
       store.save().then(function(savedStore) {
-        var query = new Parse.Query(Store);
+        const query = new Parse.Query(Store);
         query.equalTo("item", item);
         query.find().then(function(results) {
           assert.equal(results[0].id, savedStore.id);
@@ -521,10 +521,9 @@ describe('ParseMock', function(){
     });
   });
 
-
   it("should not match an incorrect equalTo query on price and name", function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo("price", 30);
       query.equalTo("name", "pants");
       query.find().then(function(results) {
@@ -536,7 +535,7 @@ describe('ParseMock', function(){
 
   it("should not match an incorrect containedIn query", function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.containedIn("price", [40, 90]);
       query.find().then(function(results) {
         assert.equal(results.length, 0);
@@ -547,7 +546,7 @@ describe('ParseMock', function(){
 
   it("should find 2 objects when there are 2 matches", function(done) {
     Parse.Promise.when(createItemP(20), createItemP(20)).then(function(item1, item2) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo("price", 20);
       query.find().then(function(results) {
         assert.equal(results.length, 2);
@@ -558,7 +557,7 @@ describe('ParseMock', function(){
 
   it("should first() 1 object when there are 2 matches", function(done) {
     Parse.Promise.when(createItemP(20), createItemP(20)).then(function(item1, item2) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo("price", 20);
       query.first().then(function(result) {
         assert.equal(result.id, item1.id);
@@ -569,7 +568,7 @@ describe('ParseMock', function(){
 
   it("should match a query with 1 objects when 2 objects are present", function(done) {
     Parse.Promise.when(createItemP(20), createItemP(30)).then(function(item1, item2) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo("price", 20);
       query.find().then(function(results) {
         assert.equal(results.length, 1);
@@ -579,11 +578,11 @@ describe('ParseMock', function(){
   });
 
   it('should match a date', function(done) {
-    var bornOnDate = new Date();
-    var item = new Item({ bornOnDate: bornOnDate });
+    const bornOnDate = new Date();
+    const item = new Item({bornOnDate: bornOnDate});
 
     item.save().then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo("bornOnDate", bornOnDate);
       query.first().then(function(result) {
         assert(result.get("bornOnDate", bornOnDate));
@@ -593,19 +592,19 @@ describe('ParseMock', function(){
   })
 
   it('should properly handle date in query operator', function(done) {
-    var bornOnDate = new Date();
-    var middleDate = new Date();
-    var expireDate = new Date();
+    const bornOnDate = new Date();
+    const middleDate = new Date();
+    const expireDate = new Date();
     middleDate.setDate(bornOnDate.getDate() + 1);
     expireDate.setDate(bornOnDate.getDate() + 2);
 
-    var item = new Item({
+    const item = new Item({
       bornOnDate: bornOnDate,
       expireDate: expireDate,
     });
 
     item.save().then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.lessThan("bornOnDate", middleDate);
       query.greaterThan("expireDate", middleDate);
       query.first().then(function(result) {
@@ -617,7 +616,7 @@ describe('ParseMock', function(){
 
   it("should handle $nin", function(done) {
     Parse.Promise.when(createItemP(20), createItemP(30)).then(function(item1, item2) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.notContainedIn("price", [30]);
       return query.find();
     }).then(function(results) {
@@ -629,7 +628,7 @@ describe('ParseMock', function(){
 
   it("should handle $nin on objectId", function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.notContainedIn("objectId", [item.id]);
       return query.find();
     }).then(function(results) {
@@ -640,7 +639,7 @@ describe('ParseMock', function(){
 
   it("should handle $nin with an empty array", function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.notContainedIn("objectId", []);
       return query.find();
     }).then(function(results) {
@@ -651,7 +650,7 @@ describe('ParseMock', function(){
 
   it("should handle $regex queries", function(done) {
     createBrandP("Acme").then(function(item) {
-      var query = new Parse.Query(Brand);
+      const query = new Parse.Query(Brand);
       query.startsWith("name", "Ac");
       return query.find();
     }).then(function(results) {
@@ -667,7 +666,7 @@ describe('ParseMock', function(){
     createBrandP("Acme").then(function(brand) {
       createItemP(30, brand).then(function(item) {
         createStoreWithItemP(item).then(function(store) {
-          var query = new Parse.Query(Store);
+          const query = new Parse.Query(Store);
           query.include("item");
           query.include("item.brand");
           query.first().then(function(str) {
@@ -702,28 +701,28 @@ describe('ParseMock', function(){
   */
 
   it("should support a nested query", function() {
-    var brand = new Brand();
+    const brand = new Brand();
     brand.set("name", "Acme");
     brand.set("country", "US");
     return brand.save().then(function(brand) {
-      var item = new Item();
+      const item = new Item();
       item.set("price", 30);
       item.set("country_code", "US");
       item.set("state", "CA");
       item.set("brand", brand);
       return item.save();
     }).then(function(item) {
-      var store = new Store();
+      const store = new Store();
       store.set("state", "CA");
       return store.save();
     }).then(function(store) {
-      var brandQuery = new Parse.Query(Brand);
+      const brandQuery = new Parse.Query(Brand);
       brandQuery.equalTo("name", "Acme");
 
-      var itemQuery = new Parse.Query(Item);
+      const itemQuery = new Parse.Query(Item);
       itemQuery.matchesKeyInQuery("country_code", "country", brandQuery);
 
-      var storeQuery = new Parse.Query(Store);
+      const storeQuery = new Parse.Query(Store);
       storeQuery.matchesKeyInQuery("state", "state", itemQuery);
       return Parse.Promise.when(storeQuery.find(), Parse.Promise.as(store));
     }).then(function(storeMatches, store) {
@@ -734,7 +733,7 @@ describe('ParseMock', function(){
 
   it('should find items not filtered by a notContainedIn', function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo("price", 30);
       query.notContainedIn("objectId", [234]);
       query.find().then(function(items) {
@@ -746,7 +745,7 @@ describe('ParseMock', function(){
 
   it('should find not items filtered by a notContainedIn', function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.equalTo("price", 30);
       query.notContainedIn("objectId", [item.id]);
       query.find().then(function(items) {
@@ -758,11 +757,11 @@ describe('ParseMock', function(){
 
   it('should handle a lessThan query', function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.lessThan("createdAt", new Date("2024-01-01T23:28:56.782Z"));
       query.find().then(function(items) {
         assert(items.length == 1);
-        var newQuery = new Parse.Query(Item);
+        const newQuery = new Parse.Query(Item);
         newQuery.greaterThan("createdAt", new Date());
         newQuery.find().then(function(moreItems) {
           assert(moreItems.length === 0);
@@ -774,7 +773,7 @@ describe('ParseMock', function(){
 
   it('should handle a lessThanOrEqualTo query', function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.lessThanOrEqualTo("price", 30);
       query.find().then(function(items) {
         assert(items.length == 1);
@@ -789,7 +788,7 @@ describe('ParseMock', function(){
 
   it('should handle a greaterThan query', function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.greaterThan("price", 20);
       query.find().then(function(items) {
         assert(items.length == 1);
@@ -804,7 +803,7 @@ describe('ParseMock', function(){
 
   it('should handle a greaterThanOrEqualTo query', function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.greaterThanOrEqualTo("price", 30);
       query.find().then(function(items) {
         assert(items.length == 1);
@@ -819,7 +818,7 @@ describe('ParseMock', function(){
 
   it('should handle multiple conditions for a single key', function(done) {
     createItemP(30).then(function(item) {
-      var query = new Parse.Query(Item);
+      const query = new Parse.Query(Item);
       query.greaterThan("price", 20);
       query.lessThan("price", 40);
       query.find().then(function(items) {
@@ -837,13 +836,13 @@ describe('ParseMock', function(){
     createBrandP("Acme").then(function(brand) {
       createItemP(30, brand).then(function(item) {
         createStoreWithItemP(item).then(function(store) {
-          var brandQuery = new Parse.Query(Brand);
+          const brandQuery = new Parse.Query(Brand);
           brandQuery.equalTo("name", "Acme");
 
-          var itemQuery = new Parse.Query(Item);
+          const itemQuery = new Parse.Query(Item);
           itemQuery.matchesQuery("brand", brandQuery);
 
-          var storeQuery = new Parse.Query(Store);
+          const storeQuery = new Parse.Query(Store);
           storeQuery.matchesQuery("item", itemQuery);
 
           storeQuery.find().then(function(store) {
@@ -859,10 +858,10 @@ describe('ParseMock', function(){
     createBrandP("Acme").then(function(brand) {
       createItemP(30, brand).then(function(item) {
         createStoreWithItemP(item).then(function(store) {
-          var itemQuery = new Parse.Query(Item);
+          const itemQuery = new Parse.Query(Item);
           itemQuery.equalTo("price", 30);
 
-          var storeQuery = new Parse.Query(Store);
+          const storeQuery = new Parse.Query(Store);
           storeQuery.matchesQuery("item", itemQuery);
           storeQuery.count().then(function(storeCount) {
             assert(storeCount === 1);
@@ -876,11 +875,11 @@ describe('ParseMock', function(){
   it('should skip and limit items appropriately', function(done) {
     createBrandP("Acme").then(function(brand) {
       createBrandP("Acme 2").then(function(brand2) {
-        var brandQuery = new Parse.Query(Brand);
+        const brandQuery = new Parse.Query(Brand);
         brandQuery.limit(1);
         brandQuery.find().then(function(brands) {
           assert(brands.length === 1);
-          var brandQuery2 = new Parse.Query(Brand);
+          const brandQuery2 = new Parse.Query(Brand);
           brandQuery2.limit(1);
           brandQuery2.skip(1);
           brandQuery2.find().then(function(moreBrands) {
@@ -921,7 +920,7 @@ describe('ParseMock', function(){
   context('when object has beforeSave hook registered', function() {
 
     function beforeSavePromise(request) {
-      var brand = request.object;
+      const brand = request.object;
       if (brand.get("error")) {
         return Parse.Promise.error("whoah");
       }
@@ -932,7 +931,7 @@ describe('ParseMock', function(){
     it('runs the hook before saving the model and persists the object', function(done) {
       ParseMockDB.registerHook('Brand', 'beforeSave', beforeSavePromise);
 
-      var brand = new Brand();
+      const brand = new Brand();
       assert(!brand.has('cool'));
       brand.set('nestedObject', { foo: 3 });
 
@@ -952,7 +951,7 @@ describe('ParseMock', function(){
     it('rejects the save if there is a problem', function(done) {
       ParseMockDB.registerHook('Brand', 'beforeSave', beforeSavePromise);
 
-      var brand = new Brand({error: true});
+      const brand = new Brand({error: true});
 
       brand.save().then(function(savedBrand) {
         throw new Error("should not have saved")
@@ -972,7 +971,7 @@ describe('ParseMock', function(){
     });
 
     function beforeDeletePromise(request) {
-      var brand = request.object;
+      const brand = request.object;
       if (brand.get("error")) {
         return Parse.Promise.error("whoah");
       }
@@ -1000,7 +999,7 @@ describe('ParseMock', function(){
     it('rejects the delete if there is a problem', function(done) {
       ParseMockDB.registerHook('Brand', 'beforeDelete', beforeDeletePromise);
 
-      var brand = new Brand({error: true});
+      const brand = new Brand({error: true});
       brand.save().done(function(savedBrand) {
         return Parse.Object.destroyAll([savedBrand]);
       }).then(function(deletedBrand) {
@@ -1038,32 +1037,32 @@ describe('ParseMock', function(){
   });
 
   it('should handle relations', function(done) {
-    var store = new Store();
+    const store = new Store();
 
-    var paperTowels = createItemP(20, 'paper towels');
-    var toothPaste = createItemP(30, 'tooth paste');
-    var toothBrush = createItemP(50, 'tooth brush');
+    const paperTowels = createItemP(20, 'paper towels');
+    const toothPaste = createItemP(30, 'tooth paste');
+    const toothBrush = createItemP(50, 'tooth brush');
 
     Parse.Promise.when(
       paperTowels,
       toothPaste,
       toothBrush
     ).then((paperTowels, toothPaste, toothBrush) => {
-      var relation = store.relation('items');
+      const relation = store.relation('items');
       relation.add(paperTowels);
       relation.add(toothPaste);
       return store.save();
     }).then(() => {
-      var relation = store.relation('items');
-      var query = relation.query();
+      const relation = store.relation('items');
+      const query = relation.query();
       return query.find();
     }).then((items) => {
       assert.equal(items.length, 2);
-      var relation = store.relation('items');
+      const relation = store.relation('items');
       relation.remove(items[1]);
       return store.save();
     }).then((store) => {
-      var relation = store.relation('items');
+      const relation = store.relation('items');
       return store.relation('items').query().find();
     }).then((items) => {
       assert.equal(items.length, 1);
@@ -1072,13 +1071,13 @@ describe('ParseMock', function(){
   });
 
   it('should handle a direct query on a relation field', function(done) {
-    var store = new Store({name: "store 1"});
-    var store2 = new Store({name: "store 2"});
+    const store = new Store({name: "store 1"});
+    const store2 = new Store({name: "store 2"});
     var tpId;
 
-    var paperTowels = createItemP(20, 'paper towels');
-    var toothPaste = createItemP(30, 'tooth paste');
-    var toothBrush = createItemP(50, 'tooth brush');
+    const paperTowels = createItemP(20, 'paper towels');
+    const toothPaste = createItemP(30, 'tooth paste');
+    const toothBrush = createItemP(50, 'tooth brush');
     Parse.Promise.when(
       paperTowels,
       toothPaste,
@@ -1087,12 +1086,12 @@ describe('ParseMock', function(){
       store2
     ).then((paperTowels, toothPaste, toothBrush) => {
       tpId = toothPaste.id;
-      var relation = store2.relation('items');
+      const relation = store2.relation('items');
       relation.add(paperTowels);
       relation.add(toothPaste);
       return store2.save()
     }).then(() => {
-      var query = new Parse.Query(Store);
+      const query = new Parse.Query(Store);
       query.equalTo('items', Item.createWithoutData(tpId));
       return query.find();
     }).then((results) => {
@@ -1103,7 +1102,7 @@ describe('ParseMock', function(){
   });
 
   it('should handle the User class', function(done) {
-    var user = new Parse.User({name: "Turtle"});
+    const user = new Parse.User({name: "Turtle"});
     user.save().then((savedUser) => {
       return (new Parse.Query(Parse.User).find())
     }).then((foundUsers) => {
@@ -1114,9 +1113,9 @@ describe('ParseMock', function(){
   })
 
   it('should handle the Role class', function(done) {
-    var roleACL = new Parse.ACL();
+    const roleACL = new Parse.ACL();
     roleACL.setPublicReadAccess(true);
-    var role = new Parse.Role("Turtle", roleACL);
+    const role = new Parse.Role("Turtle", roleACL);
     role.save().then((savedRole) => {
       return (new Parse.Query(Parse.Role).find())
     }).then((foundRoles) => {
@@ -1127,12 +1126,12 @@ describe('ParseMock', function(){
   })
 
   it('should handle redirectClassNameForKey', function(done) {
-    var user = new Parse.User({name: "T Rutlidge"})
+    const user = new Parse.User({name: "T Rutlidge"})
     user.save().then((savedUser) => {
-      var roleACL = new Parse.ACL();
+      const roleACL = new Parse.ACL();
       roleACL.setPublicReadAccess(true);
 
-      var role = new Parse.Role("Turtle", roleACL);
+      const role = new Parse.Role("Turtle", roleACL);
       role.getUsers().add(savedUser);
       return role.save();
     }).then((savedRole) => {
