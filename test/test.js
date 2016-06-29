@@ -173,7 +173,7 @@ describe('ParseMock', function(){
       return item.save();
     }).then(function(item) {
       assert.deepEqual(item.get("languages"), ["JS", "Ruby"]);
-      item.addUnique("JS");
+      item.addUnique("languages", "JS");
       return item.save();
     }).then(function(item) {
       assert.deepEqual(item.get("languages"), ["JS", "Ruby"]);

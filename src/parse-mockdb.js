@@ -200,7 +200,7 @@ const UPDATE_OPERATORS = {
     ensureArray(this, key);
     var array = this[key];
     value.objects.forEach(object => {
-      if (array.indexOf(value) === -1) {
+      if (array.indexOf(object) === -1) {
         array.push(object);
       }
     });
@@ -429,7 +429,7 @@ function handlePutRequest(request) {
   if (!currentObject) {
     return Parse.Promise.as(respond(404, {
       code: 101,
-      error: 'object not found for get'
+      error: 'object not found for put'
     }));
   }
 
