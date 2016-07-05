@@ -311,9 +311,9 @@ const SPECIAL_CLASS_NAMES = {
 function handleRequest(method, path, body) {
   const explodedPath = normalizePath(path).split('/');
   const start = explodedPath.shift();
-  const className = start === 'classes' ? explodedPath.shift() : SPECIAL_CLASS_NAMES[start]
+  const className = start === 'classes' ? explodedPath.shift() : SPECIAL_CLASS_NAMES[start];
 
-  var request = {
+  const request = {
     method: method,
     className,
     data: body,
