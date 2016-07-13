@@ -188,6 +188,9 @@ const MASKED_UPDATE_OPS = new Set(["AddRelation", "RemoveRelation"]);
  */
 const UPDATE_OPERATORS = {
   Increment: function(key, value) {
+    if (this[key] === undefined) {
+      this[key] = 0;
+    }
     this[key] += value.amount;
   },
   Add: function(key, value) {

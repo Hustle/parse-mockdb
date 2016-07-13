@@ -270,6 +270,16 @@ describe('ParseMock', function(){
     });
   });
 
+  it('should increment a non-existent field', function() {
+    return createItemP(30).then(function(item) {
+      return item
+        .increment('foo')
+        .save();
+    }).then(function(item) {
+      assert.equal(item.get('foo'), 1);
+    });
+  });
+
   it('should support unset', function() {
     return createItemP(30).then(function(item) {
       item.unset("price");
