@@ -66,7 +66,7 @@ function cleanUp() {
  * @param {function} hookFn Function that will be called with `this` bound to hydrated model.
  *                          Must return a promise.
  *
- * @note Only supports beforeSave at the moment.
+ * @note Only supports beforeSave and beforeDelete at the moment.
  */
 function registerHook(className, hookType, hookFn) {
   if (!hooks[className]) {
