@@ -410,6 +410,30 @@ describe('ParseMock', function(){
     });
   });
 
+  it("should return invalid pointers if they are not included", function() {
+    const item = new Item();
+    item.id = "ZZZZZZZZ";
+    return createStoreWithItemP(item).then(function(savedStore) {
+      const query = new Parse.Query(Store);
+      return query.first().then(function(result) {
+        assert.strictEqual(result.get("item").id, item.id);
+      });
+    });
+  });
+
+  it("should leave includes of invalid pointers undefined", function() {
+    const item = new Item();
+    item.id = "ZZZZZZZZ";
+    return createStoreWithItemP(item).then(function(savedStore) {
+      const query = new Parse.Query(Store);
+      query.include("item");
+      query.include("item.brand");
+      return query.first().then(function(result) {
+        assert.strictEqual(result.get("item"), undefined);
+      });
+    });
+  });
+
   it("should handle multiple nested includes", function() {
     var a1, a2, b, c;
     return Parse.Promise.when(
