@@ -701,7 +701,7 @@ const QUERY_OPERATORS = {
  * Deserializes an encoded query parameter if necessary
  */
 function deserializeQueryParam(param) {
-  if (typeof param === "object") {
+  if (!!param && (typeof param === "object")) {
     if (param.__type === "Date") {
       return new Date(param.iso);
     }
@@ -714,13 +714,15 @@ function deserializeQueryParam(param) {
  * (e.g. Pointer, Object)
  */
 function objectsAreEqual(obj1, obj2) {
-  if (obj1 === undefined || obj2 === undefined) {
-    return false;
-  }
-
-  // scalar values
+  // scalar values (including null/undefined)
   if (obj1 == obj2) {
     return true;
+  }
+
+  // if any of those is null or undefined the other is not because
+  // of above --> abort
+  if (!obj1 || !obj2) {
+    return false;
   }
 
   // objects

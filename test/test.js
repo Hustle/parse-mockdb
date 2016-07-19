@@ -638,6 +638,56 @@ describe('ParseMock', function(){
     });
   });
 
+  xit("should handle an equalTo null query for an object without a null field", function() {
+    return createItemP(30).then(function(item) {
+      const store = new Store();
+      store.set("item", item);
+      return store.save().then(function(savedStore) {
+        const query = new Parse.Query(Store);
+        query.equalTo("item", null);
+        return query.find().then(function(results) {
+          assert.equal(results.length, 0);
+        });
+      });
+    });
+  });
+
+  it("should handle an equalTo null query for an object with a null field", function() {
+    const store = new Store();
+    return store.save().then(function(savedStore) {
+      const query = new Parse.Query(Store);
+      query.equalTo("item", null);
+      return query.find().then(function(results) {
+        assert.equal(results[0].id, savedStore.id);
+      });
+    });
+  });
+
+  it("should handle a notEqualTo null query for an object without a null field", function() {
+    return createItemP(30).then(function(item) {
+      const store = new Store();
+      store.set("item", item);
+      return store.save().then(function(savedStore) {
+        const query = new Parse.Query(Store);
+        query.notEqualTo("item", null);
+        return query.find().then(function(results) {
+          assert.equal(results[0].id, savedStore.id);
+        });
+      });
+    });
+  });
+
+  it("should handle a notEqualTo null query for an object with a null field", function() {
+    const store = new Store();
+    return store.save().then(function(savedStore) {
+      const query = new Parse.Query(Store);
+      query.notEqualTo("item", null);
+      return query.find().then(function(results) {
+        assert.equal(results.length, 0);
+      });
+    });
+  });
+
   it("should not match an incorrect equalTo query on price", function() {
     return createItemP(30).then(function(item) {
       return itemQueryP(20).then(function(results) {
