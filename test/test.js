@@ -1199,4 +1199,40 @@ describe('ParseMock', function(){
       assert.equal(foundUsers[0].get('name'), "T Rutlidge");
     });
   });
+
+  it('should correctly find nested object in a where query', function() {
+    const store = new Store({
+      name: "store 1",
+      customOptions: {
+        isOpenHolidays: true,
+        weekendAvailability: {
+          sat: true,
+          sun: false,
+        }
+      },
+    });
+    return store.save().then(() => {
+      let storeQuery = new Parse.Query(Store);
+      storeQuery.equalTo("customOptions.isOpenHolidays", true);
+      return storeQuery.count().then(function(storeCount) {
+        assert.equal(storeCount, 1);
+        storeQuery = new Parse.Query(Store);
+        storeQuery.equalTo("customOptions.blah", true);
+        return storeQuery.count();
+      }).then(function(count) {
+        assert.equal(count, 0);
+        storeQuery = new Parse.Query(Store);
+        storeQuery.equalTo("customOptions.weekendAvailability.sun", false);
+        return storeQuery.count();
+      }).then(function(count) {
+        assert.equal(count, 1);
+        storeQuery = new Parse.Query(Store);
+        storeQuery.equalTo("customOptions.weekendAvailability.sun", true);
+        return storeQuery.count();
+      }).then(function(count) {
+        assert.equal(count, 0);
+      });
+    });
+  });
+
 });

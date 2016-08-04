@@ -585,8 +585,19 @@ function queryFilter(where) {
   };
 }
 
-// Note: does not support nested (dotted) attributes at this time
 function evaluateObject(object, whereParams, key) {
+  let nestedKeys = key.split('.');
+  if (nestedKeys.length > 1) {
+    for (let i = 0; i < nestedKeys.length - 1; i++) {
+      if (!object[nestedKeys[i]]) {
+        // key not found
+        return false;
+      }
+      object = object[nestedKeys[i]];
+      key = nestedKeys[i+1];
+    }
+  }
+
   if (typeof whereParams === "object") {
     // Handle objects that actually represent scalar values
     if (isPointer(whereParams) || isDate(whereParams)) {
