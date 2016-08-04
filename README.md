@@ -30,10 +30,10 @@ ParseMockDB.unMockDB(); // Un-mock the Parse RESTController
  - [x] Query operators ($exists, $in, $nin, $eq, $ne, $lt, $lte, $gt, $gte, $regex, $select, $inQuery, $all)
  - [x] Update operators (Increment, Add, AddUnique, Remove, Delete)
  - [x] Parse.Relation (AddRelation, RemoveRelation)
+ - [x] Parse query dotted notation matching eg `{ "name.first": "Tyler" })`
  - [ ] Parse class level permissions
  - [ ] Parse.ACL (row level permissions)
  - [ ] Parse special classes (Parse.User, Parse.Role, ...)
- - [ ] Parse query dotted notation matching eg `{ "name.first": "Tyler" })`
  - [ ] Parse lifecycle hooks (beforeSave - done, afterSave, beforeDelete - done, afterDelete)
 
 ### Tests
