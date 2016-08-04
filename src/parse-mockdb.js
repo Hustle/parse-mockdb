@@ -99,10 +99,11 @@ function getHook(className, hookType) {
  * @param {Object} data The Data that is to be hydrated into an instance of className class.
  */
 function runHook(className, hookType, data) {
-  const hook = getHook(className, hookType);
+  let hook = getHook(className, hookType);
   if (hook) {
     const modelData = Object.assign(new Object, data, {className});
     const model = Parse.Object.fromJSON(modelData);
+    hook = hook.bind(model);
 
     // TODO Stub out Parse.Cloud.useMasterKey() so that we can report the correct 'master'
     // value here.
@@ -694,7 +695,7 @@ const QUERY_OPERATORS = {
     var className = object.className;
     var id = object.objectId;
     var relatedKey = value.key;
-    var relations = getCollection(className)[id][relatedKey];
+    var relations = getCollection(className)[id][relatedKey] || [];
     if (indirect) {
       outOfBandResults = relations.reduce((results, relation) => {
         var matches = recursivelyMatch(relations[0].className, {
