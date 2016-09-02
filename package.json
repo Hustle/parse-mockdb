@@ -7,7 +7,7 @@
     "node": ">=5.0.0"
   },
   "scripts": {
-    "test": "mocha ./test/test",
+    "test": "npm run lint && mocha ./test/test",
     "lint": "eslint src/** test/**"
   },
   "repository": {
@@ -32,22 +32,32 @@
     "parse-shim": "^1.0.6"
   },
   "devDependencies": {
+    "eslint": "^3.4.0",
+    "eslint-config-airbnb": "^10.0.1",
+    "eslint-plugin-import": "^1.14.0",
+    "eslint-plugin-jsx-a11y": "^2.2.0",
+    "eslint-plugin-react": "^6.2.0",
     "mocha": "^2.2.5"
   },
   "directories": {
     "test": "test"
   },
   "eslintConfig": {
+    "extends": "airbnb",
     "parserOptions": {
-      "ecmaVersion": 6
+      "ecmaVersion": 5
     },
     "env": {
       "node": true,
       "mocha": true
     },
     "rules": {
-      "semi": ["error", "always"],
-      "space-before-function-paren": ["error", "never"]
+      "no-param-reassign": "off",
+      "no-underscore-dangle": "off",
+      "no-console": "off",
+      "new-cap": "off",
+      "strict": "off",
+      "prefer-rest-params": "off"
     }
   }
 }
