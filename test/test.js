@@ -950,11 +950,7 @@ describe('ParseMock', () => {
     })
   );
 
-/**
- *  see: https://github.com/ParsePlatform/Parse-SDK-JS/issues/91
- *  NOTE TEST IS DISABLED
- */
-  xit('should not overwrite included objects after a save', () =>
+  it('should not overwrite included objects after a save', () =>
     createBrandP('Acme').then((brand) =>
       createItemP(30, brand).then((item) =>
         createStoreWithItemP(item).then(() => {
@@ -972,11 +968,7 @@ describe('ParseMock', () => {
     )
   );
 
-/**
- *  see: https://github.com/ParsePlatform/Parse-SDK-JS/issues/91
- *  NOTE TEST IS DISABLED
- */
-  xit('should update an existing object correctly', () =>
+  it('should update an existing object correctly', () =>
     Parse.Promise.when(createItemP(30), createItemP(20)).then((item1, item2) =>
       createStoreWithItemP(item1).then((store) => {
         item2.set('price', 10);
@@ -1172,10 +1164,7 @@ describe('ParseMock', () => {
     )
   );
 
-  // See github issue: https://github.com/ParsePlatform/Parse-SDK-JS/issues/89
-  // and uncomment, delete or rewrite when resolved
-  // NOTE TEST IS DISABLED
-  xit('should deep save and update nested objects', () => {
+  it('should deep save and update nested objects', () => {
     const brand = new Brand();
     brand.set('name', 'Acme');
     brand.set('country', 'US');
