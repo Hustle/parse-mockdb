@@ -33,13 +33,18 @@ function createBrandP(name) {
   return brand.save();
 }
 
-function createItemP(price, brand) {
+function createItemP(price, brand, extra) {
   const item = new Item();
   item.set('price', price);
 
   if (brand) {
     item.set('brand', brand);
   }
+
+  if (extra) {
+    item.set(extra);
+  }
+
   return item.save();
 }
 
@@ -796,12 +801,32 @@ describe('ParseMock', () => {
     })
   );
 
+  it('should match a containedIn query', () =>
+    createItemP(30).then(() => {
+      const query = new Parse.Query(Item);
+      query.containedIn('price', [40, 30, 90]);
+      return query.find().then((results) => {
+        assert.equal(results.length, 1);
+      });
+    })
+  );
+
   it('should not match an incorrect containedIn query', () =>
     createItemP(30).then(() => {
       const query = new Parse.Query(Item);
       query.containedIn('price', [40, 90]);
       return query.find().then((results) => {
         assert.equal(results.length, 0);
+      });
+    })
+  );
+
+  it('should match a containedIn query on array of items', () =>
+    createItemP(30, 'Cereal', { languages: ['ruby', 'js', 'python'] }).then(() => {
+      const query = new Parse.Query(Item);
+      query.containedIn('languages', ['ruby']);
+      return query.find().then((results) => {
+        assert.equal(results.length, 1);
       });
     })
   );
@@ -881,6 +906,19 @@ describe('ParseMock', () => {
       assert.equal(results[0].get('price'), 20);
     })
   );
+
+  it('should handle $nin on array field', () => {
+    const item1 = createItemP(20, 'crap', { languages: ['ruby', 'js', 'python'] });
+    const item2 = createItemP(30, 'crap', { languages: ['ruby', 'js'] });
+    Parse.Promise.when(item1, item2).then(() => {
+      const query = new Parse.Query(Item);
+      query.notContainedIn('languages', ['python']);
+      return query.find();
+    }).then((results) => {
+      assert.equal(results.length, 1);
+      assert.equal(results[0].get('price'), 30);
+    });
+  });
 
   it('should handle $nin on objectId', () =>
     createItemP(30).then((item) => {
