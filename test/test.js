@@ -225,6 +225,22 @@ describe('ParseMock', () => {
     )
   );
 
+  it('should match a query that uses equalTo as contains constraint', () =>
+    createItemP(30)
+      .then((item) =>
+        new Parse.Object('Factory').save({
+          items: [item],
+        })
+        .then(savedComp => new Parse.Query('Factory')
+          .equalTo('items', item)
+          .find()
+          .then(results => {
+            assert.equal(results[0].id, savedComp.id);
+          })
+        )
+      )
+  );
+
   it('should save and find an item', () => {
     const item = new Item();
     item.set('price', 30);
