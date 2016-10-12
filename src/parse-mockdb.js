@@ -63,7 +63,7 @@ function objectsAreEqual(obj1, obj2) {
 
   // if any of those is null or undefined the other is not because
   // of above --> abort
-  if (!obj1 || !obj2) {
+  if (_.isNil(obj1) || _.isNil(obj2)) {
     return false;
   }
 
