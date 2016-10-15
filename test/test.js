@@ -382,6 +382,74 @@ describe('ParseMock', () => {
     })
   );
 
+  it('should match an item that is within a kilometer radius of a geo point', () =>
+    // the used two points are 133.4 km away according to http://www.movable-type.co.uk/scripts/latlong.html
+    new Item().save({
+      location: new Parse.GeoPoint(49, 7),
+    }).then(item =>
+      new Parse.Query(Item)
+        .withinKilometers('location', new Parse.GeoPoint(48, 8), 134)
+        .find()
+        .then(results => {
+          assert.equal(results[0].id, item.id);
+        })
+    )
+  );
+
+  it('should not match an item that is not within a kilometer radius of a geo point', () =>
+    // the used two points are 133.4 km away according to http://www.movable-type.co.uk/scripts/latlong.html
+    new Item().save({
+      location: new Parse.GeoPoint(49, 7),
+    }).then(() =>
+      new Parse.Query(Item)
+        .withinKilometers('location', new Parse.GeoPoint(48, 8), 133)
+        .find()
+    ).then(results => {
+      assert.equal(results.length, 0);
+    })
+  );
+
+  xit('should sort matches of a geo query from nearest to furthest', () =>
+    // the used two points are 133.4 km away according to http://www.movable-type.co.uk/scripts/latlong.html
+    new Item().save({
+      location: new Parse.GeoPoint(49, 7),
+    }).then(item1 =>
+      new Item().save({
+        location: new Parse.GeoPoint(49, 8),
+      }).then(item2 =>
+        new Parse.Query(Item)
+          .withinKilometers('location', new Parse.GeoPoint(48, 8), 134)
+          .find()
+          .then(results => {
+            assert.equal(results[0].id, item2.id);
+            assert.equal(results[1].id, item1.id);
+          })
+      )
+    )
+  );
+
+  it('should use a custom order over ordering from nearest to furthest in a geo query', () =>
+    // the used two points are 133.4 km away according to http://www.movable-type.co.uk/scripts/latlong.html
+    new Item().save({
+      price: 10,
+      location: new Parse.GeoPoint(49, 7),
+    }).then(item1 =>
+      new Item().save({
+        price: 20,
+        location: new Parse.GeoPoint(49, 8),
+      }).then(item2 =>
+        new Parse.Query(Item)
+          .withinKilometers('location', new Parse.GeoPoint(48, 8), 134)
+          .ascending('price')
+          .find()
+          .then(results => {
+            assert.equal(results[0].id, item1.id);
+            assert.equal(results[1].id, item2.id);
+          })
+      )
+    )
+  );
+
   it('should support unset', () =>
     createItemP(30).then((item) => {
       item.unset('price');

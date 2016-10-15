@@ -280,6 +280,13 @@ function recursivelyMatch(className, where) {
   return _.cloneDeep(matches); // return copies instead of originals
 }
 
+// according to the js sdk api documentation parse uses the following radius of the earth
+const RADIUS_OF_EARTH_KM = 6371.0;
+const RADIUS_OF_EARTH_MILES = 3958.8;
+// the parse rest guide says that the maximum distance is 100 miles if no explicit maximum
+// is provided; here we already convert this distance into radians
+const DEFAULT_MAX_DISTANCE = 100 / RADIUS_OF_EARTH_MILES;
+
 /**
  * Operators for queries
  *
@@ -335,6 +342,20 @@ const QUERY_OPERATORS = {
     }
     return undefined;
   },
+  $nearSphere: (operand, value, additionalArgs) => {
+    let maxDistance = additionalArgs.maxDistanceInRadians;
+
+    if (_.isNil(maxDistance)) {
+      maxDistance = DEFAULT_MAX_DISTANCE;
+    }
+
+    return new Parse.GeoPoint(operand).radiansTo(new Parse.GeoPoint(value)) <= maxDistance;
+  },
+  // ignore these additional parameters for the $nearSphere op
+  $maxDistance: () => true,
+  $maxDistanceInRadians: () => true,
+  $maxDistanceInKilometers: () => true,
+  $maxDistanceInMiles: () => true,
 };
 
 function evaluateObject(object, whereParams, key) {
@@ -360,14 +381,31 @@ function evaluateObject(object, whereParams, key) {
       return QUERY_OPERATORS[key].apply(null, [object, whereParams]);
     }
 
+    // $maxDistance... is not an operator for itself but just an additional parameter
+    // for the $nearSphere operator, so we have to fetch this value in advance.
+    const args = {};
+    if (whereParams) {
+      args.maxDistanceInRadians = whereParams.$maxDistance || whereParams.$maxDistanceInRadians;
+      if ('$maxDistanceInKilometers' in whereParams) {
+        args.maxDistanceInRadians = whereParams.$maxDistanceInKilometers / RADIUS_OF_EARTH_KM;
+      } else if ('$maxDistanceInMiles' in whereParams) {
+        args.maxDistanceInRadians = whereParams.$maxDistanceInMiles / RADIUS_OF_EARTH_MILES;
+      }
+    }
+
     // Process each key in where clause to determine if we have a match
     return _.reduce(whereParams, (matches, value, constraint) => {
       const keyValue = deserializeQueryParam(object[key]);
       const param = deserializeQueryParam(value);
+
       // Constraint can take the form form of a query operator OR an equality match
       if (constraint in QUERY_OPERATORS) {  // { age: {$lt: 30} }
-        return matches && QUERY_OPERATORS[constraint].apply(null, [keyValue, param]);
-      }                               // { age: 30 }
+        return matches && QUERY_OPERATORS[constraint].apply(
+          null,
+          [keyValue, param, args]
+        );
+      }
+      // { age: 30 }
       return matches && QUERY_OPERATORS.$eq.apply(null, [keyValue[constraint], param]);
     }, true);
   }
