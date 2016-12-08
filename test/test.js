@@ -1351,6 +1351,7 @@ describe('ParseMock', () => {
       return query.find();
     }).then((items) => {
       assert.equal(items.length, 2);
+      assert.equal(items[0].className, 'Item');
       const relation = store.relation('items');
       relation.remove(items[1]);
       return store.save();

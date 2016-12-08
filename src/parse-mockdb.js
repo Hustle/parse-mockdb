@@ -335,7 +335,13 @@ const QUERY_OPERATORS = {
     // What is going on here?  nothing is returned here?
     // TODO: could use a unit test to help document what's supposed to happen here
     if (indirect) {
-      outOfBandResults = relations.reduce((results, relation) => {
+      // Grab the className from the first relation item in order to set the class
+      // correctly on the way out
+      outOfBandResults = {};
+      if (relations && relations.length > 0) {
+        outOfBandResults.className = relations[0].className;
+      }
+      outOfBandResults.matches = relations.reduce((results, relation) => {
         // eslint-disable-next-line no-use-before-define
         const matches = recursivelyMatch(relations[0].className, {
           objectId: relation.objectId,
@@ -571,14 +577,15 @@ function handleGetRequest(request) {
     const match = _.cloneDeep(currentObject);
     return Parse.Promise.as(respond(200, match));
   }
-
   const data = request.data;
   indirect = data.redirectClassNameForKey;
-
   let matches = recursivelyMatch(className, data.where);
-
+  let matchesClassName = '';
   if (indirect) {
-    matches = outOfBandResults;
+    matches = outOfBandResults.matches;
+    if (outOfBandResults.className) {
+      matchesClassName = outOfBandResults.className;
+    }
   }
 
   if (request.data.count) {
@@ -604,6 +611,12 @@ function handleGetRequest(request) {
   const startIndex = data.skip || 0;
   const endIndex = startIndex + limit;
   const response = { results: matches.slice(startIndex, endIndex) };
+
+  // Add the class name for the outgoing objects to the response if sepcified
+  if (matchesClassName.length > 0) {
+    response.className = matchesClassName;
+  }
+
   return Parse.Promise.as(respond(200, response));
 }
 
