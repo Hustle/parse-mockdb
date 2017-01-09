@@ -1345,11 +1345,19 @@ describe('ParseMock', () => {
       relation.add(paperTowels);
       relation.add(toothPaste);
       return store.save();
-    }).then(() => {
+    })
+    .then(() => store.fetch()
+    ).then((fetchedStore) => {
+      const fetchRelation = fetchedStore.relation('items');
+      return fetchRelation.query().count();
+    })
+    .then((itemCount) => {
+      assert.equal(itemCount, 2);
       const relation = store.relation('items');
       const query = relation.query();
       return query.find();
-    }).then((items) => {
+    })
+    .then((items) => {
       assert.equal(items.length, 2);
       assert.equal(items[0].className, 'Item');
       const relation = store.relation('items');

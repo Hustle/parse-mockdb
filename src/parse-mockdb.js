@@ -574,7 +574,13 @@ function handleGetRequest(request) {
         error: 'object not found for update',
       }));
     }
-    const match = _.cloneDeep(currentObject);
+    let match = _.cloneDeep(currentObject);
+
+    if (match) {
+      const toOmit = Array.from(getMask(className));
+      match = _.omit(match, toOmit);
+    }
+
     return Parse.Promise.as(respond(200, match));
   }
   const data = request.data;
