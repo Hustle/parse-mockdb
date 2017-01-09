@@ -1,6 +1,6 @@
 {
   "name": "parse-mockdb",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "Parse JS SDK Mocked Database",
   "main": "src/parse-mockdb.js",
   "engines": {
