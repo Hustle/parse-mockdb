@@ -559,6 +559,34 @@ function queryMatchesAfterIncluding(matches, includeClause) {
 }
 
 /**
+ * Sort query results if necessary
+ */
+function sortQueryresults(matches, order) {
+  // sort order
+  let sortKey = order;
+  let sortDir = 1;
+  const sortArray = [];
+  if (order.charAt(0) === '-') {
+    sortKey = order.substring(1);
+    sortDir = -1;
+  }
+  matches.forEach(item => {
+    const keyVal = item[sortKey];
+    let sortVal = keyVal;
+
+    // Attempt to handle dates, numbers and strings
+    const keyDate = new Date(keyVal);
+    if (keyDate !== 'Invalid Date' && !isNaN(keyDate)) {
+      sortVal = keyDate.getTime();
+    }
+    sortArray.push({ dataItem: item, sortVal });
+  });
+  sortArray.sort((a, b) => ((a.sortVal > b.sortVal) ? 1 : -1) * sortDir);
+
+  return sortArray.map(sortItem => sortItem.dataItem);
+}
+
+/**
  * Handles a GET request (Parse.Query.find(), get(), first(), Parse.Object.fetch())
  */
 function handleGetRequest(request) {
@@ -612,6 +640,11 @@ function handleGetRequest(request) {
       match.updatedAt = match.updatedAt.toJSON();
     }
   });
+
+  // sort results if necessary
+  if (data.order && data.order.length > 0 && matches.length > 0) {
+    matches = sortQueryresults(matches, data.order);
+  }
 
   const limit = data.limit || DEFAULT_LIMIT;
   const startIndex = data.skip || 0;
