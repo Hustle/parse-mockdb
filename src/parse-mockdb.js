@@ -562,28 +562,17 @@ function queryMatchesAfterIncluding(matches, includeClause) {
  * Sort query results if necessary
  */
 function sortQueryresults(matches, order) {
-  // sort order
-  let sortKey = order;
-  let sortDir = 1;
-  const sortArray = [];
-  if (order.charAt(0) === '-') {
-    sortKey = order.substring(1);
-    sortDir = -1;
-  }
-  matches.forEach(item => {
-    const keyVal = item[sortKey];
-    let sortVal = keyVal;
-
-    // Attempt to handle dates, numbers and strings
-    const keyDate = new Date(keyVal);
-    if (keyDate !== 'Invalid Date' && !isNaN(keyDate)) {
-      sortVal = keyDate.getTime();
+  const orderArray = order.split(',').map(k => {
+    if (k.charAt(0) === '-') {
+      return [k.substring(1), 'desc'];
     }
-    sortArray.push({ dataItem: item, sortVal });
+    return [k, 'asc'];
   });
-  sortArray.sort((a, b) => ((a.sortVal > b.sortVal) ? 1 : -1) * sortDir);
 
-  return sortArray.map(sortItem => sortItem.dataItem);
+  const keys = orderArray.map(_.first);
+  const orders = orderArray.map(_.last);
+
+  return _.orderBy(matches, keys, orders);
 }
 
 /**

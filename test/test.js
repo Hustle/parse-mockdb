@@ -532,6 +532,33 @@ describe('ParseMock', () => {
     )
   );
 
+  it('should support multiple sorting parameters', () =>
+    new Item().save({
+      active: true,
+      price: 20,
+    }).then(item1 =>
+      new Item().save({
+        active: true,
+        price: 21,
+      }).then(item2 =>
+        new Item().save({
+          active: false,
+          price: 20,
+        }).then(item3 =>
+          new Parse.Query(Item)
+            .descending('active')
+            .addAscending('price')
+            .find()
+            .then(results => {
+              assert.equal(results[0].id, item1.id);
+              assert.equal(results[1].id, item2.id);
+              assert.equal(results[2].id, item3.id);
+            })
+        )
+      )
+    )
+  );
+
   it('should support unset', () =>
     createItemP(30).then((item) => {
       item.unset('price');
