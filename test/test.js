@@ -164,6 +164,10 @@ function behavesLikeParseObjectOnBeforeDelete(typeName, ParseObjectOrUserSubclas
   });
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 describe('ParseMock', () => {
   beforeEach(() => {
     Parse.MockDB.mockDB();
@@ -528,6 +532,41 @@ describe('ParseMock', () => {
               assert.equal(results[2].id, item2.id);
             })
         )
+      )
+    )
+  );
+
+  it('should use an ascending order for date query', () =>
+    new Item().save({
+      expires: new Date(2017, 0, 2),
+    }).then(item1 =>
+      new Item().save({
+        expires: new Date(2017, 0, 1),
+      }).then(item2 =>
+        new Parse.Query(Item)
+          .ascending('expires')
+          .find()
+          .then(results => {
+            assert.equal(results[0].id, item2.id);
+            assert.equal(results[1].id, item1.id);
+          })
+      )
+    )
+  );
+
+  it('should use an descending order a query on createdAt', () =>
+    new Item().save().then(item1 =>
+      // we need to make sure the created at dates are different!
+      sleep(1).then(() =>
+        new Item().save()
+      ).then(item2 =>
+        new Parse.Query(Item)
+          .descending('createdAt')
+          .find()
+          .then(results => {
+            assert.equal(results[0].id, item2.id);
+            assert.equal(results[1].id, item1.id);
+          })
       )
     )
   );

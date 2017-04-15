@@ -563,10 +563,15 @@ function queryMatchesAfterIncluding(matches, includeClause) {
  */
 function sortQueryresults(matches, order) {
   const orderArray = order.split(',').map(k => {
+    let dir = 'asc';
+    let key = k;
+
     if (k.charAt(0) === '-') {
-      return [k.substring(1), 'desc'];
+      key = k.substring(1);
+      dir = 'desc';
     }
-    return [k, 'asc'];
+
+    return [item => deserializeQueryParam(item[key]), dir];
   });
 
   const keys = orderArray.map(_.first);
