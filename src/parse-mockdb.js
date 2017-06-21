@@ -310,8 +310,10 @@ const QUERY_OPERATORS = {
   $gt: (operand, value) => operand > value,
   $gte: (operand, value) => operand >= value,
   $regex: (operand, value) => {
-    const regex = _.clone(value).replace(QUOTE_REGEXP, '');
-    return (new RegExp(regex).test(operand));
+    const regex = _.clone(value.$regex).replace(QUOTE_REGEXP, '');
+    console.log('xxxxx',
+    value.$regex, value.$options, (new RegExp(regex, value.$options).test(operand)));
+    return (new RegExp(regex, value.$options).test(operand));
   },
   $select: (operand, value) => {
     const foreignKey = value.key;
@@ -390,6 +392,11 @@ function evaluateObject(object, whereParams, key) {
 
     if (key in QUERY_OPERATORS) {
       return QUERY_OPERATORS[key].apply(null, [object, whereParams]);
+    }
+
+    if ('$regex' in whereParams) {
+      console.log('hereeeee');
+      return QUERY_OPERATORS.$regex.apply(null, [object[key], whereParams]);
     }
 
     // $maxDistance... is not an operator for itself but just an additional parameter

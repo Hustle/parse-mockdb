@@ -1168,13 +1168,33 @@ describe('ParseMock', () => {
     })
   );
 
-  it('should handle $regex queries', () =>
+  it('should handle startsWith queries', () =>
     createBrandP('Acme').then(() => {
       const query = new Parse.Query(Brand);
       query.startsWith('name', 'Ac');
       return query.find();
     }).then((results) => {
       assert.equal(results.length, 1);
+    })
+  );
+
+  it('should handle matches queries', () =>
+    createBrandP('Acme').then(() => {
+      const query = new Parse.Query(Brand);
+      query.matches('name', /ac/i);
+      return query.find();
+    }).then((results) => {
+      assert.equal(results.length, 1);
+    })
+  );
+
+  it('should handle matches queries that dont match', () =>
+    createBrandP('Acme').then(() => {
+      const query = new Parse.Query(Brand);
+      query.matches('name', /ac/);
+      return query.find();
+    }).then((results) => {
+      assert.equal(results.length, 0);
     })
   );
 
