@@ -311,8 +311,6 @@ const QUERY_OPERATORS = {
   $gte: (operand, value) => operand >= value,
   $regex: (operand, value) => {
     const regex = _.clone(value.$regex).replace(QUOTE_REGEXP, '');
-    console.log('xxxxx',
-    value.$regex, value.$options, (new RegExp(regex, value.$options).test(operand)));
     return (new RegExp(regex, value.$options).test(operand));
   },
   $select: (operand, value) => {
@@ -395,7 +393,6 @@ function evaluateObject(object, whereParams, key) {
     }
 
     if ('$regex' in whereParams) {
-      console.log('hereeeee');
       return QUERY_OPERATORS.$regex.apply(null, [object[key], whereParams]);
     }
 
