@@ -630,6 +630,44 @@ describe('ParseMock', () => {
     })
   );
 
+  it('should support addUnique with parse objects', () =>
+    new Item().save().then(i =>
+      new Brand()
+        .save()
+        .then(b => {
+          b.addUnique('items', i);
+          return b.save();
+        })
+        .then(b => {
+          b.addUnique('items', i);
+          return b.save();
+        })
+        .then(b => b.fetch())
+        .then(b => {
+          assert.equal(b.get('items').length, 1);
+          assert.equal(b.get('items')[0].id, i.id);
+        })
+    )
+  );
+
+  it('should support addUnique with dates', () =>
+    new Item()
+      .save()
+      .then(i => {
+        i.addUnique('dates', new Date(5));
+        return i.save();
+      })
+      .then(i => {
+        i.addUnique('dates', new Date(5));
+        return i.save();
+      })
+      .then(i => i.fetch())
+      .then(i => {
+        assert.equal(i.get('dates').length, 1);
+        assert.equal(i.get('dates')[0].getTime(), 5);
+      })
+  );
+
   it('should support remove', () =>
     createItemP(30).then((item) => {
       item.add('languages', 'JS');

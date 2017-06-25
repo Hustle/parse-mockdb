@@ -134,7 +134,7 @@ const UPDATE_OPERATORS = {
     ensureArray(object, key);
     const array = object[key];
     value.objects.forEach(el => {
-      if (array.indexOf(el) === -1) {
+      if (!_.some(array, e => objectsAreEqual(e, el))) {
         array.push(el);
       }
     });
