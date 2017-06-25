@@ -153,7 +153,9 @@ const UPDATE_OPERATORS = {
     ensureArray(object, key);
     const relation = object[key];
     value.objects.forEach(pointer => {
-      relation.push(pointer);
+      if (!_.some(relation, e => objectsAreEqual(e, pointer))) {
+        relation.push(pointer);
+      }
     });
   },
   RemoveRelation: (object, key, value) => {
