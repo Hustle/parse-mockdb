@@ -164,6 +164,48 @@ function behavesLikeParseObjectOnBeforeDelete(typeName, ParseObjectOrUserSubclas
   });
 }
 
+function behavesLikeParseObjectOnAfterSave(typeName, ParseObjectOrUserSubclass) {
+  context('when object has afterSave hook registered', () => {
+    const errorMessage = 'Error in afterSave hook test';
+    let didAfterSave = false;
+    function afterSavePromise(request) {
+      if (request.object.get('error')) {
+        return Parse.Promise.error(errorMessage);
+      }
+      didAfterSave = true;
+      return Parse.Promise.as();
+    }
+
+    beforeEach(() => {
+      didAfterSave = false;
+    });
+
+    it('runs the hook after saving the model and persists the object', () => {
+      ParseMockDB.registerHook(typeName, 'afterSave', afterSavePromise);
+
+      const object = new ParseObjectOrUserSubclass();
+      assert(!object.has('cool'));
+
+      return object.save().then((savedObject) => {
+        assert(!savedObject.has('cool'));
+        assert(didAfterSave);
+      });
+    });
+
+    it('rejects the save if there is a problem', () => {
+      ParseMockDB.registerHook(typeName, 'afterSave', afterSavePromise);
+
+      const object = new ParseObjectOrUserSubclass({ error: true });
+
+      return object.save().then(() => {
+        assert.fail(null, null, 'should not have saved');
+      }, error => {
+        assert.equal(error, errorMessage);
+      });
+    });
+  });
+}
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -196,6 +238,7 @@ describe('ParseMock', () => {
 
     behavesLikeParseObjectOnBeforeSave('_User', CustomUserSubclass);
     behavesLikeParseObjectOnBeforeDelete('_User', CustomUserSubclass);
+    behavesLikeParseObjectOnAfterSave('_User', CustomUserSubclass);
   });
 
   it('should save correctly', () =>
@@ -1477,6 +1520,10 @@ describe('ParseMock', () => {
 
   context('when object has beforeDelete hook registered', () => {
     behavesLikeParseObjectOnBeforeDelete('Brand', Brand);
+  });
+
+  context('when object has afterSave hook registered', () => {
+    behavesLikeParseObjectOnAfterSave('Brand', Brand);
   });
 
   it('successfully uses containsAll query', () =>

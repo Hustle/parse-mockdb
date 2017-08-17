@@ -197,7 +197,7 @@ function cleanUp() {
  * @param {function} hookFn Function that will be called with `this` bound to hydrated model.
  *                          Must return a promise.
  *
- * @note Only supports beforeSave and beforeDelete at the moment.
+ * @note Only supports beforeSave, beforeDelete, and afterSave at the moment.
  */
 function registerHook(className, hookType, hookFn) {
   if (!hooks[className]) {
@@ -737,7 +737,7 @@ function handlePostRequest(request) {
     );
 
     return Parse.Promise.as(respond(201, response));
-  });
+  }).then(result => runHook(className, 'afterSave', request.data).then(() => result));
 }
 
 function handlePutRequest(request) {
@@ -775,7 +775,7 @@ function handlePutRequest(request) {
       { updatedAt: now }
     );
     return Parse.Promise.as(respond(200, response));
-  });
+  }).then(result => runHook(className, 'afterSave', updatedObject).then(() => result));
 }
 
 function handleDeleteRequest(request) {

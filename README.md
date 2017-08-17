@@ -34,7 +34,7 @@ ParseMockDB.unMockDB(); // Un-mock the Parse RESTController
  - [ ] Parse class level permissions
  - [ ] Parse.ACL (row level permissions)
  - [ ] Parse special classes (Parse.User, Parse.Role, ...)
- - [ ] Parse lifecycle hooks (beforeSave - done, afterSave, beforeDelete - done, afterDelete)
+ - [ ] Parse lifecycle hooks (beforeSave - done, afterSave - done, beforeDelete - done, afterDelete)
 
 ### Tests
 
