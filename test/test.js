@@ -176,8 +176,20 @@ function behavesLikeParseObjectOnAfterSave(typeName, ParseObjectOrUserSubclass) 
       return Parse.Promise.as();
     }
 
+    let objectInAfterSave = {};
+    function afterSaveHasCreatedAt(request) {
+      didAfterSave = true;
+      objectInAfterSave = {
+        createdAt: request.object.get('createdAt'),
+        updatedAt: request.object.get('updatedAt'),
+        id: request.object.id,
+      };
+      return Parse.Promise.as();
+    }
+
     beforeEach(() => {
       didAfterSave = false;
+      objectInAfterSave = {};
     });
 
     it('runs the hook after saving the model and persists the object', () => {
@@ -192,15 +204,31 @@ function behavesLikeParseObjectOnAfterSave(typeName, ParseObjectOrUserSubclass) 
       });
     });
 
-    it('rejects the save if there is a problem', () => {
+    it('object is saved even if there was a problem', () => {
       ParseMockDB.registerHook(typeName, 'afterSave', afterSavePromise);
 
       const object = new ParseObjectOrUserSubclass({ error: true });
+      return object.save();
+    });
 
-      return object.save().then(() => {
-        assert.fail(null, null, 'should not have saved');
-      }, error => {
-        assert.equal(error, errorMessage);
+    it('object has the complete object during aftersave', () => {
+      ParseMockDB.registerHook(typeName, 'afterSave', afterSaveHasCreatedAt);
+
+      const object = new ParseObjectOrUserSubclass();
+      return object.save().then((savedObject) => {
+        assert(didAfterSave);
+        assert.equal(
+          objectInAfterSave.createdAt.getTime(),
+          savedObject.get('createdAt').getTime()
+        );
+        assert.equal(
+          objectInAfterSave.updatedAt.getTime(),
+          savedObject.get('updatedAt').getTime()
+        );
+        assert.equal(
+          objectInAfterSave.id,
+          savedObject.id
+        );
       });
     });
   });
