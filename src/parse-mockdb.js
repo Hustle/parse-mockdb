@@ -673,7 +673,11 @@ function runHook(className, hookType, data) {
   let hook = getHook(className, hookType);
   if (hook) {
     const modelData = Object.assign({}, data, { className });
-    const model = Parse.Object.fromJSON(modelData);
+    const modelJSON = _.mapValues(modelData,
+      // Convert dates into JSON loadable representations
+      value => ((value instanceof Date) ? value.toJSON() : value)
+    );
+    const model = Parse.Object.fromJSON(modelJSON);
     hook = hook.bind(model);
 
     // TODO Stub out Parse.Cloud.useMasterKey() so that we can report the correct 'master'
@@ -712,7 +716,7 @@ function handlePostRequest(request) {
   const className = request.className;
   const collection = getCollection(className);
 
-  let response;
+  let newObject;
   return runHook(className, 'beforeSave', request.data).then(result => {
     const changedKeys = getChangedKeys(request.data, result);
 
@@ -721,7 +725,7 @@ function handlePostRequest(request) {
 
     const ops = extractOps(result);
 
-    const newObject = Object.assign(
+    newObject = Object.assign(
       result,
       { objectId: newId, createdAt: now, updatedAt: now }
     );
@@ -732,13 +736,16 @@ function handlePostRequest(request) {
 
     collection[newId] = newObject;
 
-    response = Object.assign(
+    const response = Object.assign(
       _.cloneDeep(_.omit(_.pick(result, toPick), toOmit)),
       { objectId: newId, createdAt: result.createdAt.toJSON() }
     );
 
     return Parse.Promise.as(respond(201, response));
-  }).then(result => runHook(className, 'afterSave', response).then(() => result));
+  }).then((result) => {
+    runHook(className, 'afterSave', newObject);
+    return result;
+  });
 }
 
 function handlePutRequest(request) {
@@ -767,17 +774,19 @@ function handlePutRequest(request) {
   applyOps(updatedObject, ops, className);
   const toOmit = ['createdAt', 'objectId'].concat(Array.from(getMask(className)));
 
-  let response;
   return runHook(className, 'beforeSave', updatedObject).then(result => {
     const changedKeys = getChangedKeys(updatedObject, result);
 
     collection[request.objectId] = updatedObject;
-    response = Object.assign(
+    const response = Object.assign(
       _.cloneDeep(_.omit(_.pick(result, Object.keys(ops).concat(changedKeys)), toOmit)),
       { updatedAt: now }
     );
     return Parse.Promise.as(respond(200, response));
-  }).then(result => runHook(className, 'afterSave', response).then(() => result));
+  }).then((result) => {
+    runHook(className, 'afterSave', updatedObject);
+    return result;
+  });
 }
 
 function handleDeleteRequest(request) {
