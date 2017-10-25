@@ -780,7 +780,7 @@ function handlePutRequest(request) {
     collection[request.objectId] = updatedObject;
     const response = Object.assign(
       _.cloneDeep(_.omit(_.pick(result, Object.keys(ops).concat(changedKeys)), toOmit)),
-      { updatedAt: now }
+      { updatedAt: now.toJSON() }
     );
     return Parse.Promise.as(respond(200, response));
   }).then((result) => {

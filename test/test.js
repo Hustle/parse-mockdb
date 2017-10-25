@@ -1327,7 +1327,8 @@ describe('ParseMock', () => {
         store.set('item', item2);
         return store.save().then((returnedStore) => {
           assert(returnedStore.has('item'));
-          assert(returnedStore.get('item').get('price') === 10);
+          assert.equal(returnedStore.get('item').get('price'), 10);
+          assert(returnedStore.get('updatedAt') instanceof Date);
         });
       })
     )
