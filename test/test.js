@@ -179,50 +179,110 @@ function behavesLikeParseObjectOnAfterSave(typeName, ParseObjectOrUserSubclass) 
       objectInAfterSave = {};
     });
 
-    it('runs the hook after saving the model and persisting the object', () => {
-      ParseMockDB.registerHook(typeName, 'afterSave', afterSavePromise);
-      const object = new ParseObjectOrUserSubclass();
-      return object.save().then(() => assert(didAfterSave));
-    });
-
-    it("get all the object's attributes during the afterSave hook", () => {
-      ParseMockDB.registerHook(typeName, 'afterSave', afterSavePromise);
-      const object = new ParseObjectOrUserSubclass({ name: 'abc' });
-      return object.save().then((savedObject) => {
-        assert(didAfterSave);
-
-        assert.equal(
-          objectInAfterSave.get('createdAt').getTime(),
-          savedObject.get('createdAt').getTime()
-        );
-
-        assert.equal(
-          objectInAfterSave.get('updatedAt').getTime(),
-          savedObject.get('updatedAt').getTime()
-        );
-
-        assert.equal(
-          objectInAfterSave.id,
-          savedObject.id
-        );
-
-        assert.equal(
-          objectInAfterSave.get('name'),
-          savedObject.get('name')
-        );
-      });
-    });
-
-    context('when the afterSave hook hits an error', () => {
-      beforeEach(() => {
-        const badHook = () => Parse.Promise.reject(new Error('Something went wrong'));
-        ParseMockDB.registerHook(typeName, 'afterSave', badHook);
-      });
-
-      it('still saves the object', () => {
+    context('when saving a new object', () => {
+      it('runs the hook after saving the model and persisting the object', () => {
+        ParseMockDB.registerHook(typeName, 'afterSave', afterSavePromise);
         const object = new ParseObjectOrUserSubclass();
+        return object.save().then(() => assert(didAfterSave));
+      });
+
+      it("get all the object's attributes during the afterSave hook", () => {
+        ParseMockDB.registerHook(typeName, 'afterSave', afterSavePromise);
+        const object = new ParseObjectOrUserSubclass({ name: 'abc' });
         return object.save().then((savedObject) => {
-          assert(!!savedObject.id);
+          assert(didAfterSave);
+
+          assert.equal(
+            objectInAfterSave.get('createdAt').getTime(),
+            savedObject.get('createdAt').getTime()
+          );
+
+          assert.equal(
+            objectInAfterSave.get('updatedAt').getTime(),
+            savedObject.get('updatedAt').getTime()
+          );
+
+          assert.equal(
+            objectInAfterSave.id,
+            savedObject.id
+          );
+
+          assert.equal(
+            objectInAfterSave.get('name'),
+            savedObject.get('name')
+          );
+        });
+      });
+
+      context('when the afterSave hook hits an error', () => {
+        beforeEach(() => {
+          const badHook = () => Parse.Promise.reject(new Error('Something went wrong'));
+          ParseMockDB.registerHook(typeName, 'afterSave', badHook);
+        });
+
+        it('still saves the object', () => {
+          const object = new ParseObjectOrUserSubclass();
+          return object.save().then((savedObject) => {
+            assert(!!savedObject.id);
+          });
+        });
+      });
+    });
+
+    context('when updating an existing object', () => {
+      let object;
+      beforeEach(() => {
+        // Tricky: We're creating this object before registering the hook,
+        // so it won't fire here.
+        object = new ParseObjectOrUserSubclass({ name: 'original' });
+        return object.save();
+      });
+
+      it('runs the hook after saving the model and persisting the object', () => {
+        ParseMockDB.registerHook(typeName, 'afterSave', afterSavePromise);
+        object.set('name', 'updated');
+        return object.save().then(() => assert(didAfterSave));
+      });
+
+      it("get all the object's attributes during the afterSave hook", () => {
+        ParseMockDB.registerHook(typeName, 'afterSave', afterSavePromise);
+        object.set('name', 'updated');
+        return object.save().then((savedObject) => {
+          assert(didAfterSave);
+
+          assert.equal(
+            objectInAfterSave.get('createdAt').getTime(),
+            savedObject.get('createdAt').getTime()
+          );
+
+          assert.equal(
+            objectInAfterSave.get('updatedAt').getTime(),
+            savedObject.get('updatedAt').getTime()
+          );
+
+          assert.equal(
+            objectInAfterSave.id,
+            savedObject.id
+          );
+
+          assert.equal(
+            objectInAfterSave.get('name'),
+            'updated'
+          );
+        });
+      });
+
+      context('when the afterSave hook hits an error', () => {
+        beforeEach(() => {
+          const badHook = () => Parse.Promise.reject(new Error('Something went wrong'));
+          ParseMockDB.registerHook(typeName, 'afterSave', badHook);
+        });
+
+        it('still saves the object', () => {
+          object.set('name', 'updated');
+          return object.save().then((savedObject) => {
+            assert(!!savedObject.id);
+          });
         });
       });
     });
