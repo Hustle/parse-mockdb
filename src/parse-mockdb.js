@@ -3,6 +3,8 @@
 const Parse = require('parse-shim');
 const _ = require('lodash');
 
+const crypto = require('./crypto');
+
 const DEFAULT_LIMIT = 100;
 const QUOTE_REGEXP = /(\\Q|\\E)/g;
 
@@ -720,7 +722,7 @@ function handlePostRequest(request) {
   return runHook(className, 'beforeSave', request.data).then(result => {
     const changedKeys = getChangedKeys(request.data, result);
 
-    const newId = _.uniqueId();
+    const newId = crypto.newObjectId();
     const now = new Date();
 
     const ops = extractOps(result);
