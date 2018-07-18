@@ -684,7 +684,7 @@ function runHook(className, hookType, data) {
 
     // TODO Stub out Parse.Cloud.useMasterKey() so that we can report the correct 'master'
     // value here.
-    return hook(makeRequestObject(model, false)).done((beforeSaveOverrideValue) => {
+    return hook(makeRequestObject(model, false)).then((beforeSaveOverrideValue) => {
       debugPrint('HOOK', { beforeSaveOverrideValue });
 
       // Unlike BeforeDeleteResponse, BeforeSaveResponse might specify

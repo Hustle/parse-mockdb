@@ -164,14 +164,25 @@ function behavesLikeParseObjectOnBeforeDelete(typeName, ParseObjectOrUserSubclas
   });
 }
 
-function behavesLikeParseObjectOnAfterSave(typeName, ParseObjectOrUserSubclass) {
+/**
+ * @param promiseType 'ES' for Promise, or 'Parse' for Parse.Promise
+ */
+function behavesLikeParseObjectOnAfterSaveForPromiseType(
+    typeName, ParseObjectOrUserSubclass, promiseType) {
   context('when object has afterSave hook registered', () => {
     let didAfterSave;
     let objectInAfterSave;
     function afterSavePromise(request) {
       didAfterSave = true;
       objectInAfterSave = request.object;
-      return Parse.Promise.as();
+      switch (promiseType) {
+        case 'Parse':
+          return Parse.Promise.as();
+        case 'ES':
+          return Promise.resolve();
+        default:
+          throw Error(`Invalid Promise type: ${promiseType}`);
+      }
     }
 
     beforeEach(() => {
@@ -286,6 +297,16 @@ function behavesLikeParseObjectOnAfterSave(typeName, ParseObjectOrUserSubclass) 
         });
       });
     });
+  });
+}
+
+function behavesLikeParseObjectOnAfterSave(typeName, ParseObjectOrUserSubclass) {
+  context('using Parse.Promise', () => {
+    behavesLikeParseObjectOnAfterSaveForPromiseType(typeName, ParseObjectOrUserSubclass, 'Parse');
+  });
+
+  context('using standard JS Promise', () => {
+    behavesLikeParseObjectOnAfterSaveForPromiseType(typeName, ParseObjectOrUserSubclass, 'ES');
   });
 }
 
