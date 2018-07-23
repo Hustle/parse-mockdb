@@ -693,7 +693,7 @@ function runHook(className, hookType, data) {
         objectToProceedWith = beforeSaveOverrideValue.toJSON();
       }
 
-      return Parse.Promise.as(_.omit(objectToProceedWith, 'ACL'));
+      return Parse.Promise.as(objectToProceedWith);
     });
   }
   return Parse.Promise.as(data);
