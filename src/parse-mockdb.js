@@ -21,6 +21,7 @@ let outOfBandResults = null;
 
 let defaultController = null;
 let mocked = false;
+let user = null;
 
 function debugPrint(prefix, object) {
   if (CONFIG.DEBUG) {
@@ -222,12 +223,16 @@ function getHook(className, hookType) {
   return undefined;
 }
 
+function mockUser(_user) {
+  user = _user;
+}
+
 function makeRequestObject(model, useMasterKey) {
   return {
     installationId: 'parse-mockdb',
     master: useMasterKey,
     object: model,
-    user: "ParseMockDB doesn't define request.user.",
+    user,
   };
 }
 
@@ -868,6 +873,7 @@ Parse.MockDB = {
   cleanUp,
   promiseResultSync,
   registerHook,
+  mockUser,
 };
 
 module.exports = Parse.MockDB;
