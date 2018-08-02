@@ -69,9 +69,12 @@ function itemQueryP(price) {
 function behavesLikeParseObjectOnBeforeSave(typeName, ParseObjectOrUserSubclass) {
   context('when object has beforeSave hook registered', () => {
     function beforeSavePromise(request) {
-      const object = request.object;
+      const { original, object } = request;
       if (object.get('error')) {
         return Parse.Promise.error('whoah');
+      }
+      if (original && object.get('value') <= original.get('value')) {
+        return Parse.Promise.error('The value can only go up, not down');
       }
       object.set('cool', true);
       return Parse.Promise.as(object);
@@ -103,6 +106,20 @@ function behavesLikeParseObjectOnBeforeSave(typeName, ParseObjectOrUserSubclass)
         assert.fail(null, null, 'should not have saved');
       }, error => {
         assert.equal(error, 'whoah');
+      });
+    });
+
+    it('rejects the save if there is a problem based on the previous value', () => {
+      ParseMockDB.registerHook(typeName, 'beforeSave', beforeSavePromise);
+
+      const object = new ParseObjectOrUserSubclass({ value: 4 });
+      return object.save().then(() => {
+        object.set('value', 3);
+        return object.save();
+      }).then(() => {
+        assert.fail(null, null, 'should not have saved');
+      }, error => {
+        assert.equal(error, 'The value can only go up, not down');
       });
     });
   });
