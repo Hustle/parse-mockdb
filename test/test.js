@@ -1029,6 +1029,21 @@ describe('ParseMock', () => {
     });
   });
 
+  it('should handle includes for array of string', () => {
+    const item = new Item({ alternateNames: ['item1', 'originalItem'] });
+    return Parse.Object.saveAll([item]).then(() => {
+      const brand = new Brand({
+        item,
+      });
+      return brand.save();
+    }).then(() => {
+      const q = new Parse.Query(Brand).include('item,item.alternateNames');
+      return q.first();
+    }).then((brand) => {
+      assert.deepEqual(brand.get('item').get('alternateNames'), ['item1', 'originalItem']);
+    });
+  });
+
   it('should handle includes where item is missing', () => {
     const item = new Item({ cool: true });
     const brand1 = new Brand({});

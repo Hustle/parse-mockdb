@@ -534,10 +534,14 @@ function includePaths(object, pathsRemaining) {
 
   if (target) {
     if (Array.isArray(target)) {
-      object[path] = target.map(pointer => {
-        const fetched = fetchObjectByPointer(pointer);
-        includePaths(fetched, _.cloneDeep(pathsRemaining));
-        return fetched;
+      object[path] = target.map(item => {
+        if (item.className) {
+          // This is a pointer or an object
+          const fetched = fetchObjectByPointer(item);
+          includePaths(fetched, _.cloneDeep(pathsRemaining));
+          return fetched;
+        }
+        return item;
       });
     } else {
       if (object[path].__type === 'Pointer') {
