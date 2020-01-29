@@ -1,11 +1,10 @@
 {
   "name": "parse-mockdb",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Parse JS SDK Mocked Database",
   "main": "src/parse-mockdb.js",
   "engines": {
-    "node": ">=5.0.0",
-    "npm": "5.3.x"
+    "node": ">=5.0.0"
   },
   "scripts": {
     "test": "npm run lint && mocha ./test/test",
