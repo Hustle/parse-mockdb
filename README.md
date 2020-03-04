@@ -36,6 +36,13 @@ ParseMockDB.unMockDB(); // Un-mock the Parse RESTController
  - [ ] Parse special classes (Parse.User, Parse.Role, ...)
  - [ ] Parse lifecycle hooks (beforeSave - done, afterSave - done, beforeDelete - done, afterDelete)
 
+
+### Changelog
+
+#### Pending release
+- *Breaking Change* Removed ParseMockDB.promiseResultSync method
+
+
 ### Tests
 
 ```sh

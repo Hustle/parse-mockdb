@@ -819,15 +819,6 @@ function handleDeleteRequest(request) {
   });
 }
 
-// **HACK** Makes testing easier.
-function promiseResultSync(promise) {
-  let result;
-  promise.then(res => {
-    result = res;
-  });
-  return result;
-}
-
 const HANDLERS = {
   GET: handleGetRequest,
   POST: handlePostRequest,
@@ -884,7 +875,6 @@ Parse.MockDB = {
   mockDB,
   unMockDB,
   cleanUp,
-  promiseResultSync,
   registerHook,
   mockUser,
 };
