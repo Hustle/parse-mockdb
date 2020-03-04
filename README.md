@@ -40,6 +40,9 @@ ParseMockDB.unMockDB(); // Un-mock the Parse RESTController
 ### Changelog
 
 #### Pending release
+- *Breaking Change* Stopped patching MockDB object on to Parse module. You can no longer
+  access `Parse.MockDB`, you must load the `parse-mockdb` module explicitly.
+
 - *Breaking Change* Removed ParseMockDB.promiseResultSync method
 
 

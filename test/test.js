@@ -333,11 +333,11 @@ function sleep(ms) {
 
 describe('ParseMock', () => {
   beforeEach(() => {
-    Parse.MockDB.mockDB();
+    ParseMockDB.mockDB();
   });
 
   afterEach(() => {
-    Parse.MockDB.cleanUp();
+    ParseMockDB.cleanUp();
   });
 
   context('supports Parse.User subclasses', () => {

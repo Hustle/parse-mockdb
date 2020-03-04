@@ -871,7 +871,7 @@ function unMockDB() {
   }
 }
 
-Parse.MockDB = {
+const MockDB = {
   mockDB,
   unMockDB,
   cleanUp,
@@ -879,4 +879,4 @@ Parse.MockDB = {
   mockUser,
 };
 
-module.exports = Parse.MockDB;
+module.exports = MockDB;
