@@ -39,7 +39,7 @@ ParseMockDB.unMockDB(); // Un-mock the Parse RESTController
 
 ### Changelog
 
-#### Pending release
+#### v0.3.0
 - *Breaking Change* When calling `mockDB()` you must now pass in a reference to
   the Parse SDK that you want to mock.
 
