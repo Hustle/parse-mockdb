@@ -333,7 +333,7 @@ function sleep(ms) {
 
 describe('ParseMock', () => {
   beforeEach(() => {
-    ParseMockDB.mockDB();
+    ParseMockDB.mockDB(Parse);
   });
 
   afterEach(() => {

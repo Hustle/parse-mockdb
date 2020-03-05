@@ -16,7 +16,7 @@ npm install parse-mockdb --save-dev
 const Parse = require('parse-shim');
 const ParseMockDB = require('parse-mockdb');
 
-ParseMockDB.mockDB(); // Mock the Parse RESTController
+ParseMockDB.mockDB(Parse); // Mock the Parse RESTController
 
 // Perform saves, queries, updates, deletes, etc... using the Parse JS SDK
 
@@ -40,6 +40,9 @@ ParseMockDB.unMockDB(); // Un-mock the Parse RESTController
 ### Changelog
 
 #### Pending release
+- *Breaking Change* When calling `mockDB()` you must now pass in a reference to
+  the Parse SDK that you want to mock.
+
 - *Breaking Change* Stopped patching MockDB object on to Parse module. You can no longer
   access `Parse.MockDB`, you must load the `parse-mockdb` module explicitly.
 

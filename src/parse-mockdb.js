@@ -1,6 +1,5 @@
 'use strict';
 
-const Parse = require('parse-shim');
 const _ = require('lodash');
 
 const crypto = require('./crypto');
@@ -12,6 +11,7 @@ const CONFIG = {
   DEBUG: process.env.DEBUG_DB,
 };
 
+let Parse;
 let db = {};
 let hooks = {};
 const masks = {};
@@ -853,7 +853,8 @@ const MockRESTController = {
  * Mocks a Parse API server, by intercepting requests and storing/querying data locally
  * in an in-memory DB.
  */
-function mockDB() {
+function mockDB(parseModule) {
+  Parse = parseModule;
   if (!mocked) {
     defaultController = Parse.CoreManager.getRESTController();
     mocked = true;
