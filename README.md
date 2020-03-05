@@ -39,7 +39,7 @@ ParseMockDB.unMockDB(); // Un-mock the Parse RESTController
 
 ### Changelog
 
-### Pending release
+### v0.4.0
 
 - *Breaking Change* This library is now targeting the 2.x series of the Parse JS SDK. If you are
   using Parse 1.6+, you should pin to the v0.3.x release.
