@@ -36,7 +36,7 @@
     "eslint-plugin-jsx-a11y": "^2.2.0",
     "eslint-plugin-react": "^6.2.0",
     "mocha": "^2.2.5",
-    "parse": "^1.7.0"
+    "parse": "^2.0.0"
   },
   "directories": {
     "test": "test"
@@ -60,6 +60,6 @@
     }
   },
   "peerDependencies": {
-    "parse": "^1.7.0"
+    "parse": "^2.0.0"
   }
 }

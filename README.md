@@ -3,7 +3,7 @@ Parse MockDB
 
 Master Build Status: [![Circle CI](https://circleci.com/gh/Hustle/parse-mockdb/tree/master.svg?style=svg)](https://circleci.com/gh/Hustle/parse-mockdb/tree/master)
 
-Provides a mocked Parse RESTController compatible with version `1.6+` of the JavaScript SDK.
+Provides a mocked Parse RESTController compatible with version `2.0+` of the JavaScript SDK.
 
 ### Installation and Usage
 
@@ -38,6 +38,11 @@ ParseMockDB.unMockDB(); // Un-mock the Parse RESTController
 
 
 ### Changelog
+
+### Pending release
+
+- *Breaking Change* This library is now targeting the 2.x series of the Parse JS SDK. If you are
+  using Parse 1.6+, you should pin to the v0.3.x release.
 
 #### v0.3.0
 - *Breaking Change* When calling `mockDB()` you must now pass in a reference to

@@ -472,7 +472,7 @@ function handleRequest(method, path, body) {
     // eslint-disable-next-line no-use-before-define
     return HANDLERS[method](request);
   } catch (e) {
-    return Parse.Promise.error(e);
+    return Promise.reject(e);
   }
 }
 
@@ -497,12 +497,10 @@ function handleBatchRequest(unused1, unused2, data) {
     const path = request.path;
     const body = request.body;
     return handleRequest(method, path, body)
-      .then(result => Parse.Promise.as({ success: result.response }));
+      .then(result => Promise.resolve({ success: result.response }));
   });
 
-  return Parse.Promise.when.apply(null, getResults).then(function theResults() {
-    return respond(200, arguments);
-  });
+  return Promise.all(getResults).then(results => respond(200, results));
 }
 
 /**
@@ -609,7 +607,7 @@ function handleGetRequest(request) {
     const collection = getCollection(className);
     const currentObject = collection[objId];
     if (!currentObject) {
-      return Parse.Promise.as(respond(404, {
+      return Promise.resolve(respond(404, {
         code: 101,
         error: 'object not found for update',
       }));
@@ -621,7 +619,7 @@ function handleGetRequest(request) {
       match = _.omit(match, toOmit);
     }
 
-    return Parse.Promise.as(respond(200, match));
+    return Promise.resolve(respond(200, match));
   }
   const data = request.data;
   indirect = data.redirectClassNameForKey;
@@ -635,7 +633,7 @@ function handleGetRequest(request) {
   }
 
   if (request.data.count) {
-    return Parse.Promise.as(respond(200, { count: matches.length }));
+    return Promise.resolve(respond(200, { count: matches.length }));
   }
 
   matches = queryMatchesAfterIncluding(matches, data.include);
@@ -668,7 +666,7 @@ function handleGetRequest(request) {
     response.className = matchesClassName;
   }
 
-  return Parse.Promise.as(respond(200, response));
+  return Promise.resolve(respond(200, response));
 }
 
 /**
@@ -711,10 +709,10 @@ function runHook(className, hookType, data) {
         objectToProceedWith = beforeSaveOverrideValue.toJSON();
       }
 
-      return Parse.Promise.as(objectToProceedWith);
+      return Promise.resolve(objectToProceedWith);
     });
   }
-  return Parse.Promise.as(data);
+  return Promise.resolve(data);
 }
 
 function getChangedKeys(originalObject, updatedObject) {
@@ -761,7 +759,7 @@ function handlePostRequest(request) {
       { objectId: newId, createdAt: result.createdAt.toJSON() }
     );
 
-    return Parse.Promise.as(respond(201, response));
+    return Promise.resolve(respond(201, response));
   }).then((result) => {
     runHook(className, 'afterSave', newObject);
     return result;
@@ -779,7 +777,7 @@ function handlePutRequest(request) {
   const ops = extractOps(data);
 
   if (!currentObject) {
-    return Parse.Promise.as(respond(404, {
+    return Promise.resolve(respond(404, {
       code: 101,
       error: 'object not found for put',
     }));
@@ -802,7 +800,7 @@ function handlePutRequest(request) {
       _.cloneDeep(_.omit(_.pick(result, Object.keys(ops).concat(changedKeys)), toOmit)),
       { updatedAt: now.toJSON() }
     );
-    return Parse.Promise.as(respond(200, response));
+    return Promise.resolve(respond(200, response));
   }).then((result) => {
     runHook(className, 'afterSave', updatedObject);
     return result;
@@ -815,7 +813,7 @@ function handleDeleteRequest(request) {
 
   return runHook(request.className, 'beforeDelete', objToDelete).then(() => {
     delete collection[request.objectId];
-    return Parse.Promise.as(respond(200, {}));
+    return Promise.resolve(respond(200, {}));
   });
 }
 
@@ -841,7 +839,7 @@ const MockRESTController = {
       // Status of database after handling request above
       debugPrint('DB', db);
       debugPrint('RESPONSE', finalResult.response);
-      return Parse.Promise.when(finalResult.response, finalResult.status);
+      return Promise.resolve(finalResult.response);
     });
   },
   ajax: () => {

@@ -71,13 +71,13 @@ function behavesLikeParseObjectOnBeforeSave(typeName, ParseObjectOrUserSubclass)
     function beforeSavePromise(request) {
       const { original, object } = request;
       if (object.get('error')) {
-        return Parse.Promise.error('whoah');
+        return Promise.reject('whoah');
       }
       if (original && object.get('value') <= original.get('value')) {
-        return Parse.Promise.error('The value can only go up, not down');
+        return Promise.reject('The value can only go up, not down');
       }
       object.set('cool', true);
-      return Parse.Promise.as(object);
+      return Promise.resolve(object);
     }
 
     it('runs the hook before saving the model and persists the object', () => {
@@ -136,10 +136,10 @@ function behavesLikeParseObjectOnBeforeDelete(typeName, ParseObjectOrUserSubclas
     function beforeDeletePromise(request) {
       const object = request.object;
       if (object.get('error')) {
-        return Parse.Promise.error('whoah');
+        return Promise.reject('whoah');
       }
       beforeDeleteWasRun = true;
-      return Parse.Promise.as();
+      return Promise.resolve();
     }
 
     it('runs the hook before deleting the object', () => {
@@ -149,57 +149,46 @@ function behavesLikeParseObjectOnBeforeDelete(typeName, ParseObjectOrUserSubclas
 
       promises.push(new ParseObjectOrUserSubclass()
         .save()
-        .done(savedParseObjectOrUserSubclass =>
+        .then(savedParseObjectOrUserSubclass =>
           Parse.Object.destroyAll([savedParseObjectOrUserSubclass]))
-        .done(() => assert(beforeDeleteWasRun))
+        .then(() => assert(beforeDeleteWasRun))
       );
 
       promises.push(new Parse.Query(ParseObjectOrUserSubclass)
         .find()
-        .done(results => {
+        .then(results => {
           assert.equal(results.length, 0);
         }));
 
-      return Parse.Promise.when(promises);
+      return Promise.all(promises);
     });
 
     it('rejects the delete if there is a problem', () => {
       ParseMockDB.registerHook(typeName, 'beforeDelete', beforeDeletePromise);
 
       const object = new ParseObjectOrUserSubclass({ error: true });
-      return object.save().done(savedParseObjectOrUserSubclass =>
+      return object.save().then(savedParseObjectOrUserSubclass =>
         Parse.Object.destroyAll([savedParseObjectOrUserSubclass])
       ).then(() => {
         assert.fail(null, null, 'should not have deleted');
       }, (error) => {
         assert.equal(error, 'whoah');
         return new Parse.Query(ParseObjectOrUserSubclass).find();
-      }).done((results) => {
+      }).then((results) => {
         assert.equal(results.length, 1);
       });
     });
   });
 }
 
-/**
- * @param promiseType 'ES' for Promise, or 'Parse' for Parse.Promise
- */
-function behavesLikeParseObjectOnAfterSaveForPromiseType(
-    typeName, ParseObjectOrUserSubclass, promiseType) {
+function behavesLikeParseObjectOnAfterSave(typeName, ParseObjectOrUserSubclass) {
   context('when object has afterSave hook registered', () => {
     let didAfterSave;
     let objectInAfterSave;
     function afterSavePromise(request) {
       didAfterSave = true;
       objectInAfterSave = request.object;
-      switch (promiseType) {
-        case 'Parse':
-          return Parse.Promise.as();
-        case 'ES':
-          return Promise.resolve();
-        default:
-          throw Error(`Invalid Promise type: ${promiseType}`);
-      }
+      return Promise.resolve();
     }
 
     beforeEach(() => {
@@ -244,7 +233,7 @@ function behavesLikeParseObjectOnAfterSaveForPromiseType(
 
       context('when the afterSave hook hits an error', () => {
         beforeEach(() => {
-          const badHook = () => Parse.Promise.reject(new Error('Something went wrong'));
+          const badHook = () => Promise.reject(new Error('Something went wrong'));
           ParseMockDB.registerHook(typeName, 'afterSave', badHook);
         });
 
@@ -302,7 +291,7 @@ function behavesLikeParseObjectOnAfterSaveForPromiseType(
 
       context('when the afterSave hook hits an error', () => {
         beforeEach(() => {
-          const badHook = () => Parse.Promise.reject(new Error('Something went wrong'));
+          const badHook = () => Promise.reject(new Error('Something went wrong'));
           ParseMockDB.registerHook(typeName, 'afterSave', badHook);
         });
 
@@ -314,16 +303,6 @@ function behavesLikeParseObjectOnAfterSaveForPromiseType(
         });
       });
     });
-  });
-}
-
-function behavesLikeParseObjectOnAfterSave(typeName, ParseObjectOrUserSubclass) {
-  context('using Parse.Promise', () => {
-    behavesLikeParseObjectOnAfterSaveForPromiseType(typeName, ParseObjectOrUserSubclass, 'Parse');
-  });
-
-  context('using standard JS Promise', () => {
-    behavesLikeParseObjectOnAfterSaveForPromiseType(typeName, ParseObjectOrUserSubclass, 'ES');
   });
 }
 
@@ -432,9 +411,9 @@ describe('ParseMock', () => {
     }).then(() => new Parse.Query('Factory')
       .equalTo('items', [0, 1])
       .find()
-      .then(() => Parse.Promise.error(
+      .then(() => Promise.reject(
           new Error('Promise should have failed')),
-        () => Parse.Promise.as(true))
+        () => Promise.resolve(true))
     )
   );
 
@@ -523,7 +502,7 @@ describe('ParseMock', () => {
     ParseMockDB.registerHook('Brand', 'beforeSave', request => {
       const object = request.object;
       object.set('name', 'bar');
-      return Parse.Promise.as(object);
+      return Promise.resolve(object);
     });
 
     return new Item().save({
@@ -902,7 +881,7 @@ describe('ParseMock', () => {
   );
 
   it('should save 2 items and get one for a first() query', () =>
-    Parse.Promise.when(createItemP(30), createItemP(20)).then(() => {
+    Promise.all([createItemP(30), createItemP(20)]).then(() => {
       const query = new Parse.Query(Item);
       return query.first().then((item) => {
         assert.equal(item.get('price'), 30);
@@ -962,10 +941,11 @@ describe('ParseMock', () => {
     let b;
     let c;
 
-    return Parse.Promise.when(
-        new Parse.Object('a', { value: '1' }).save(),
-        new Parse.Object('a', { value: '2' }).save())
-    .then((savedA1, savedA2) => {
+    return Promise.all([
+      new Parse.Object('a', { value: '1' }).save(),
+      new Parse.Object('a', { value: '2' }).save(),
+    ])
+    .then(([savedA1, savedA2]) => {
       a1 = savedA1;
       a2 = savedA2;
       return new Parse.Object('b', { a1, a2 }).save();
@@ -1122,10 +1102,10 @@ describe('ParseMock', () => {
   });
 
   it('should find with objectId and where', () =>
-     Parse.Promise.when(
+    Promise.all([
       new Item().save({ price: 30 }),
-      new Item().save({ name: 'Device' })
-    ).then((item1) => {
+      new Item().save({ name: 'Device' }),
+    ]).then(([item1]) => {
       const itemQuery = new Parse.Query(Item);
       itemQuery.exists('nonExistent');
       itemQuery.equalTo('objectId', item1.id);
@@ -1136,10 +1116,10 @@ describe('ParseMock', () => {
   );
 
   it('should match a correct when exists query', () =>
-    Parse.Promise.when(
+    Promise.all([
       new Item().save({ price: 30 }),
-      new Item().save({ name: 'Device' })
-    ).then((item1) => {
+      new Item().save({ name: 'Device' }),
+    ]).then(([item1]) => {
       const itemQuery = new Parse.Query(Item);
       itemQuery.exists('price');
       return itemQuery.find().then((items) => {
@@ -1150,10 +1130,10 @@ describe('ParseMock', () => {
   );
 
   it('should match a correct when doesNotExist query', () =>
-    Parse.Promise.when(
+    Promise.all([
       new Item().save({ price: 30 }),
-      new Item().save({ name: 'Device' })
-    ).then((item1, item2) => {
+      new Item().save({ name: 'Device' }),
+    ]).then(([item1, item2]) => { // eslint-disable-line no-unused-vars
       const itemQuery = new Parse.Query(Item);
       itemQuery.doesNotExist('price');
       return itemQuery.find().then((items) => {
@@ -1277,7 +1257,7 @@ describe('ParseMock', () => {
   );
 
   it('should find 2 objects when there are 2 matches', () =>
-    Parse.Promise.when(createItemP(20), createItemP(20)).then(() => {
+    Promise.all([createItemP(20), createItemP(20)]).then(() => {
       const query = new Parse.Query(Item);
       query.equalTo('price', 20);
       return query.find().then((results) => {
@@ -1287,7 +1267,7 @@ describe('ParseMock', () => {
   );
 
   it('should first() 1 object when there are 2 matches', () =>
-    Parse.Promise.when(createItemP(20), createItemP(20)).then((item1) => {
+    Promise.all([createItemP(20), createItemP(20)]).then(([item1]) => {
       const query = new Parse.Query(Item);
       query.equalTo('price', 20);
       return query.first().then((result) => {
@@ -1297,7 +1277,7 @@ describe('ParseMock', () => {
   );
 
   it('should match a query with 1 objects when 2 objects are present', () =>
-    Parse.Promise.when(createItemP(20), createItemP(30)).then(() => {
+    Promise.all([createItemP(20), createItemP(30)]).then(() => {
       const query = new Parse.Query(Item);
       query.equalTo('price', 20);
       return query.find().then((results) => {
@@ -1342,7 +1322,7 @@ describe('ParseMock', () => {
   });
 
   it('should handle $nin', () =>
-    Parse.Promise.when(createItemP(20), createItemP(30)).then(() => {
+    Promise.all([createItemP(20), createItemP(30)]).then(() => {
       const query = new Parse.Query(Item);
       query.notContainedIn('price', [30]);
       return query.find();
@@ -1355,7 +1335,7 @@ describe('ParseMock', () => {
   it('should handle $nin on array field', () => {
     const item1 = createItemP(20, 'crap', { languages: ['ruby', 'js', 'python'] });
     const item2 = createItemP(30, 'crap', { languages: ['ruby', 'js'] });
-    Parse.Promise.when(item1, item2).then(() => {
+    Promise.all([item1, item2]).then(() => {
       const query = new Parse.Query(Item);
       query.notContainedIn('languages', ['python']);
       return query.find();
@@ -1434,7 +1414,7 @@ describe('ParseMock', () => {
   );
 
   it('should update an existing object correctly', () =>
-    Parse.Promise.when(createItemP(30), createItemP(20)).then((item1, item2) =>
+    Promise.all([createItemP(30), createItemP(20)]).then(([item1, item2]) =>
       createStoreWithItemP(item1).then((store) => {
         item2.set('price', 10);
         store.set('item', item2);
@@ -1471,9 +1451,9 @@ describe('ParseMock', () => {
 
       const storeQuery = new Parse.Query(Store);
       storeQuery.matchesKeyInQuery('state', 'state', itemQuery);
-      return Parse.Promise.when(storeQuery.find(), Parse.Promise.as(store));
+      return Promise.all([storeQuery.find(), Promise.resolve(store)]);
     })
-    .then((storeMatches, store) => {
+    .then(([storeMatches, store]) => {
       assert.equal(storeMatches.length, 1);
       assert.equal(storeMatches[0].id, store.id);
     });
@@ -1664,7 +1644,7 @@ describe('ParseMock', () => {
   });
 
   it('successfully uses containsAll query', () =>
-    Parse.Promise.when(createItemP(30), createItemP(20)).then((item1, item2) => {
+    Promise.all([createItemP(30), createItemP(20)]).then(([item1, item2]) => {
       const store = new Store({
         items: [item1.toPointer(), item2.toPointer()],
       });
@@ -1690,11 +1670,11 @@ describe('ParseMock', () => {
     const toothPaste0 = createItemP(30, 'tooth paste');
     const toothBrush0 = createItemP(50, 'tooth brush');
 
-    return Parse.Promise.when(
+    return Promise.all([
       paperTowels0,
       toothPaste0,
-      toothBrush0
-    ).then((paperTowels, toothPaste) => {
+      toothBrush0,
+    ]).then(([paperTowels, toothPaste]) => {
       const relation = store.relation('items');
       relation.add(paperTowels);
       relation.add(toothPaste);
@@ -1758,13 +1738,13 @@ describe('ParseMock', () => {
     const paperTowels0 = createItemP(20, 'paper towels');
     const toothPaste0 = createItemP(30, 'tooth paste');
     const toothBrush0 = createItemP(50, 'tooth brush');
-    return Parse.Promise.when(
+    return Promise.all([
       paperTowels0,
       toothPaste0,
       toothBrush0,
       store,
-      store2
-    ).then((paperTowels, toothPaste) => {
+      store2,
+    ]).then(([paperTowels, toothPaste]) => {
       tpId = toothPaste.id;
       const relation = store2.relation('items');
       relation.add(paperTowels);
