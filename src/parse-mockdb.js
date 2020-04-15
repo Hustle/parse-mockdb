@@ -597,11 +597,27 @@ function sortQueryresults(matches, order) {
 }
 
 /**
+ * Projects out specific fields in the response (the `keys` parameter
+ * in the REST API).
+ */
+function projectFields(objects, fields) {
+  const realFields = [
+    ...fields.split(','),
+    'objectId',
+    'createdAt',
+    'updatedAt',
+    'ACL',
+  ];
+  return objects.map(object => _.pick(object, realFields));
+}
+
+/**
  * Handles a GET request (Parse.Query.find(), get(), first(), Parse.Object.fetch())
  */
 function handleGetRequest(request) {
   const objId = request.objectId;
   const className = request.className;
+  const data = request.data;
   if (objId) {
     // Object.fetch() query
     const collection = getCollection(className);
@@ -619,9 +635,12 @@ function handleGetRequest(request) {
       match = _.omit(match, toOmit);
     }
 
+    if (data.keys) {
+      match = projectFields([match], data.keys)[0];
+    }
+
     return Promise.resolve(respond(200, match));
   }
-  const data = request.data;
   indirect = data.redirectClassNameForKey;
   let matches = recursivelyMatch(className, data.where);
   let matchesClassName = '';
@@ -654,6 +673,10 @@ function handleGetRequest(request) {
   // sort results if necessary
   if (data.order && data.order.length > 0 && matches.length > 0) {
     matches = sortQueryresults(matches, data.order);
+  }
+
+  if (data.keys) {
+    matches = projectFields(matches, data.keys);
   }
 
   const limit = data.limit || DEFAULT_LIMIT;

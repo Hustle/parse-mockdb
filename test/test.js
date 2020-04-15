@@ -27,9 +27,12 @@ Parse.Object.registerSubclass('Store', Store);
 
 class CustomUserSubclass extends Parse.User { }
 
-function createBrandP(name) {
+function createBrandP(name, extra) {
   const brand = new Brand();
   brand.set('name', name);
+  if (extra) {
+    brand.set(extra);
+  }
   return brand.save();
 }
 
@@ -1552,6 +1555,65 @@ describe('ParseMock', () => {
       });
     })
   );
+
+  describe('projecting fields', () => {
+    let savedBrand;
+    const brandExtra = { type: 'utility' };
+    beforeEach(() => createBrandP('ACME', brandExtra).then((brand) => { savedBrand = brand; }));
+
+    let savedItem;
+    const itemExtra = { name: 'Dynamite', description: 'Blows up.' };
+    beforeEach(() => createItemP(30, savedBrand, itemExtra).then((item) => { savedItem = item; }));
+
+    it('can project when fetching a single item', () => (
+      new Parse.Query(Item).select('name').get(savedItem.id).then((item) => {
+        assert(item.id); // "id" is always projected
+        assert(item.createdAt); // "createdAt" is always projected
+        assert(item.updatedAt); // "updatedAt" is always projected
+        assert.equal(item.get('price'), undefined); // this attribute was set but not projected
+        assert.equal(item.get('name'), 'Dynamite'); // this attribute was projected
+      })
+    ));
+
+    it('can project a single field passed as a string', () => (
+      new Parse.Query(Item).select('name').find().then((items) => {
+        assert.equal(items.length, 1);
+        const item = items[0];
+        assert(item.id); // "id" is always projected
+        assert(item.createdAt); // "createdAt" is always projected
+        assert(item.updatedAt); // "updatedAt" is always projected
+        assert.equal(item.get('price'), undefined); // this attribute was set but not projected
+        assert.equal(item.get('name'), 'Dynamite'); // this attribute was projected
+      })
+    ));
+
+    it('can project multiple fields passed as an array', () => (
+      new Parse.Query(Item).select(['name', 'price']).find().then((items) => {
+        assert.equal(items.length, 1);
+        const item = items[0];
+        assert(item.id); // "id" is always projected
+        assert(item.createdAt); // "createdAt" is always projected
+        assert(item.updatedAt); // "updatedAt" is always projected
+        assert.equal(item.get('price'), 30); // this attribute was projected
+        assert.equal(item.get('name'), 'Dynamite'); // this attribute was projected
+        assert.equal(item.get('description'), undefined); // this attribute was not projected
+      })
+    ));
+
+    it('can project fields from nested objects', () => {
+      new Parse.Query(Item)
+        .select(['name', 'brand.type'])
+        .find()
+        .then((items) => {
+          assert.equal(items.length, 1);
+          const item = items[0];
+          const brand = item.get('brand');
+          assert(brand);
+          assert.equal(brand.get('type'), 'utility'); // this attribute was projected
+          assert.equal(brand.get('name'), undefined); // this attribute was not projected
+        });
+    });
+  });
 
   it('should correctly handle matchesQuery', () =>
     createBrandP('Acme').then((brand) =>
